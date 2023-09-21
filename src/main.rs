@@ -1,76 +1,21 @@
 #[macro_use] extern crate rocket;
-use std::env;
 use std::process;
-use std::io;
+mod routes;
+mod input_filter_engine;
+mod processor;
 
-#[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
-}
 
 #[launch]
 fn rocket() -> _ {
 
-    let args:Vec<String> = env::args().collect();
+    let result = processor::processor(); 
 
-    // dbg!(&args);
-    // print!("{}",args.iter().count());
+    if let Ok(val) = result {
+        val
+    }else{
 
-    if args.iter().count() == 1{
-
-        println!("                                                        ..                    
-        ./((###########(/                   /(###############(/            
-     /(#####((////////((###(/            (####((/////////((######(*        
-  /(##########################(       ,(###########################((      
-*(((############################(    (###############################(/    
-/((((/***/(###(((((((###########%%(  %####(///(#####((((((###########(((/   
-/((((*,,,*(###(((///((###(/*/(#%%%%%%%%##(*,,,/(####(((//((###(/***/***/((/  
-.((((/,,,,/####((////((###(/**(#%%%%%%%%##/,,,*(######(///((###(/****/***((/. 
-/((((*,,,*(####((///(((###(/*/#%%%%%%%%%##(,,,*(######((/(((###(/****/***/((* 
-,((((/**//((##(((((((((###((/(#%%%%%%%%%##(**//((####(((((((###((///((((((((. 
-//(((((((((###((((((((####((##%%%%%%%%%###((((((####(((((((#####(((######(/  
-/(((((((######((((((##########%%%%(  %####(((#######((((###############(/   
-*/((((((((######################(    (##############################((/    
-  /(((((((####################(       .(##########################((/      
-     /(((###################(            (#######################(*        
-        .((#############(                   *#################(   \n\n");
-
-
-    println!("Hadron Query Mode::::::::::::\n");
-
-
-    
-    loop {
-        let mut input = String::new();
-
-    // Read user input and handle errors
-    match io::stdin().read_line(&mut input) {
-        Ok(_) => {
-
-            if input == String::from("exit\r\n") || input == String::from("exit\n"){
-                println!("Hadron exiting.........");
-                process::exit(0);
-            }else{
-
-            }
-        }
-        Err(error) => {
-            // eprintln!("Error: {}", error);
-            // println!("Hadron exiting.........");
-            process::exit(0);
-        }
-    }
-}
-    }
-
-    if args[1].to_string() == String::from("powerup") {
-        rocket::build().mount("/", routes![index])
-    }
-    else{
-            process::exit(0);
+        process::exit(0);
 
     }
-
-    
 
 }
