@@ -3,7 +3,7 @@ extern crate rocket;
 use rocket::{Rocket, Build, Error};
 
 use crate::routes::get_routes;
-// use crate::input_filter_engine::query_filter;
+use crate::input_filter_engine::query_filter;
 
 pub fn processor() -> Result<Rocket<Build>,Error>{
 
@@ -47,7 +47,8 @@ pub fn processor() -> Result<Rocket<Build>,Error>{
                 println!("Hadron exiting.........");
                 process::exit(0);
             }else{
-
+                // println!("{input}");
+                query_filter::filter(&input);
             }
         }
         Err(_) => {
