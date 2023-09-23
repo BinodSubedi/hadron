@@ -3,14 +3,6 @@
 version = 3
 
 [[package]]
-name = "Hadron"
-version = "0.1.0"
-dependencies = [
- "rocket",
- "serde_json",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -369,6 +361,14 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+]
+
+[[package]]
+name = "hadron"
+version = "0.1.0"
+dependencies = [
+ "rocket",
+ "serde_json",
 ]
 
 [[package]]
