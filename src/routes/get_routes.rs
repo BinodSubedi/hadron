@@ -1,5 +1,3 @@
-use rocket::serde::json;
-
 #[get("/<collection>")]
 pub async fn get_all(collection:String)-> String{
    format!("The collection of choice for whole query is {}",collection)   
