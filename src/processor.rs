@@ -2,7 +2,7 @@ use std::{env, process, io};
 extern crate rocket;
 use rocket::{Rocket, Build, Error};
 
-use crate::routes::get_routes::{get_all, get_many, get_one};
+use crate::routes::get_routes::{get_all, get_many, get_one, get_custom_filter};
 use crate::input_filter_engine::query_filter;
 
 pub fn processor() -> Result<Rocket<Build>,Error>{
@@ -61,7 +61,7 @@ pub fn processor() -> Result<Rocket<Build>,Error>{
     }
 
     if args[1].to_string() == String::from("powerup") {
-        Ok(rocket::build().mount("/get", routes![get_one,get_all,get_many]))
+        Ok(rocket::build().mount("/get", routes![get_one,get_all,get_many,get_custom_filter]))
     }
     else{
             process::exit(0);
