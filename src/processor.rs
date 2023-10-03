@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
+use std::ops::Deref;
+use std::rc::Rc;
 use std::{env, process, io, fs};
 extern crate rocket;
 // use rocket::response::status::NotFound;
@@ -26,11 +28,16 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
     }  
     };
 
-    // println!("{:#?}",files);
+    let mut length = 0;
+
 
     for file in files {
         if let Ok(val) = file{
             // println!("{:#?}",val);
+
+                //let inner_count = &mut len;
+                length += 1;
+//                println!("len:{}",inner_count);
              if val.file_type()?.is_file() {
                 // Process the file
                 println!("File Name: {:?}", val.file_name());
@@ -42,6 +49,38 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
                 if let Ok(len) =  opened.read_to_end(&mut contents){
 
                     println!("length of data {}",len);
+
+                    if len == 0{
+
+                    let key_val = "Thats my Kung Fu".as_bytes();
+                    let mut vec_key = Vec::new();
+                    for &byte in key_val.iter(){
+                        vec_key.push(byte);
+                    } 
+
+                    //println!("{:#?}",&vec_key);
+
+                   let key:&GenericArray<u8,U16> = GenericArray::from_slice(&vec_key);
+
+                    // let mut block:GenericArray<u8,U16> = GenericArray::from([0u8;16]);
+                    let cipher = Aes128::new(&key);
+
+                let mut block:GenericArray<u8,U16> =  GenericArray::from_slice(&vec_key).clone();
+                 
+                 cipher.encrypt_block(&mut block);
+
+                 let mut new_file = OpenOptions::new().append(true).open(directory.clone()+"/configure.dat")?;
+
+
+                     if let Err(err) =  new_file.write_all(&block){
+                         eprintln!("{:?}",err);
+                         process::exit(0);
+                     }
+
+                     println!("Initial setup done🚀🚀");
+                    process::exit(0); 
+
+                    }
                     // println!("{:#?}",contents);
 
                     // let key = GenericArray::from([0u8; 16]);
@@ -125,6 +164,41 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 
 
     }
+
+    println!("len:{}",length);
+    if length == 0 {
+                    let key_val = "Thats my Kung Fu".as_bytes();
+                    let mut vec_key = Vec::new();
+                    for &byte in key_val.iter(){
+                        vec_key.push(byte);
+                    } 
+
+                    //println!("{:#?}",&vec_key);
+
+                   let key:&GenericArray<u8,U16> = GenericArray::from_slice(&vec_key);
+
+                    // let mut block:GenericArray<u8,U16> = GenericArray::from([0u8;16]);
+                    let cipher = Aes128::new(&key);
+
+                let mut block:GenericArray<u8,U16> =  GenericArray::from_slice(&vec_key).clone();
+                 
+                 cipher.encrypt_block(&mut block);
+
+                 let mut new_file = OpenOptions::new().append(true).open(directory.clone()+"/configure.dat")?;
+
+
+                     if let Err(err) =  new_file.write_all(&block){
+                         eprintln!("{:?}",err);
+                         process::exit(0);
+                     }
+
+                     println!("Initial setup done🚀🚀");
+                    process::exit(0); 
+
+
+                    //write bloc
+
+                       }
 
     let args:Vec<String> = env::args().collect();
 
