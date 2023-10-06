@@ -1,15 +1,15 @@
 use std::error::Error;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use std::ops::Deref;
-use std::rc::Rc;
+//use std::ops::Deref;
+//use std::rc::Rc;
+//use bytes::{BytesMut, BufMut};
 use std::{env, process, io, fs};
 extern crate rocket;
 // use rocket::response::status::NotFound;
 use rocket::{Rocket, Build};
 use aes::Aes128;
-use aes::cipher::{
-    BlockCipher, BlockEncrypt, BlockDecrypt, KeyInit,
+use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
     generic_array::{GenericArray,typenum::U16},
 };
 
@@ -17,6 +17,8 @@ use crate::routes::get_routes::{get_all, get_many, get_one, get_custom_filter};
 use crate::input_filter_engine::query_filter;
 
 pub fn processor() -> Result<Rocket<Build>,Box<dyn Error>>{
+ 
+let args:Vec<String> = env::args().collect();
 
 let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/hadron/.data/configure");
 
@@ -40,7 +42,7 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 //                println!("len:{}",inner_count);
              if val.file_type()?.is_file() {
                 // Process the file
-                println!("File Name: {:?}", val.file_name());
+               // println!("File Name: {:?}", val.file_name());
                 
                 let mut opened = File::open(val.path())?;
 
@@ -48,11 +50,35 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 
                 if let Ok(len) =  opened.read_to_end(&mut contents){
 
-                    println!("length of data {}",len);
+                   // println!("length of data {}",len);
 
                     if len == 0{
+                    //let mut buffer = BytesMut::with_capacity(16);
+                    let mut pass = String::from("");
 
-                    let key_val = "Thats my Kung Fu".as_bytes();
+                    println!("Please enter your password(make it 16 characters):");
+                    match io::stdin().read_line(&mut pass){
+                        Ok(val)=> val,
+                        Err(_)=>panic!("Something unexpected in input password")
+                    };
+
+                    let mut final_str = String::from("");
+
+                    for c in pass.chars(){
+                        if c == '\r' || c == '\n' {
+                            //println!("here \\r and \\n")
+                            continue;
+                        }else{
+                           final_str.push(c);
+                        }
+                    };
+
+                    //println!("{}",pass);
+
+                    let key_val = final_str.as_bytes();
+
+                    //buffer.put(key_val);
+
                     let mut vec_key = Vec::new();
                     for &byte in key_val.iter(){
                         vec_key.push(byte);
@@ -86,7 +112,23 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
                     // let key = GenericArray::from([0u8; 16]);
                     // let key = GenericArray::from_slice();
 
-                    let key_val = "Thats my Kung Fu".as_bytes();
+                    let strr;
+                    if args.iter().count() == 2 {
+                        strr = &args[1];
+                    }else if args.iter().count() == 3 {
+                        strr = &args[2];
+                    }else{
+                        process::exit(0);
+                    }
+
+
+
+                    let key_val =strr.as_bytes();
+
+                    if key_val.len() != 16 {
+                        process::exit(0);
+                    }
+
                     let mut vec_key = Vec::new();
                     for &byte in key_val.iter(){
                         vec_key.push(byte);
@@ -103,18 +145,18 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 
                     loop{    
                     
-                        println!("counterrr:{}, {}",counter,contents.len());
+                        //println!("counterrr:{}, {}",counter,contents.len());
 
                        blocks.push( GenericArray::from_slice(&contents[counter..(counter+16)]).clone());
 
-                       println!("{}",&counter);
+                       //println!("{}",&counter);
 
                        counter = counter + 16; 
 
 
                         if counter == contents.len(){
 
-                            println!("{counter}");
+                            //println!("{counter}");
                             
                             break;
                         }
@@ -136,7 +178,12 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 
                         let plaintext = String::from_utf8(block.to_vec())?;
 
-                        println!("{:#?}",&plaintext);
+                        //println!("{:#?}",&plaintext);
+
+                        if strr != &plaintext {
+                            println!("Wrong credential entered!");
+                            process::exit(0);
+                        }
 
                     }
 
@@ -165,9 +212,43 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 
     }
 
-    println!("len:{}",length);
+
+    //here below block is for creating initial setup when no file as configure.dat
+    //above initial setup is when file exists but file content is empty
+
+   // println!("len:{}",length);
     if length == 0 {
-                    let key_val = "Thats my Kung Fu".as_bytes();
+
+                    match File::create("C:/Users/Acer/OneDrive/Documents/Everything_rust/hadron/.data/configure/configure.dat") {
+                    Ok(_)=> (),
+                    Err(err)=> panic!("Failed to create file: {err}")
+                    };
+
+                    let mut pass = String::from("");
+
+                    println!("Please enter your password(make it 16 characters):");
+                    match io::stdin().read_line(&mut pass){
+                        Ok(val)=> val,
+                        Err(_)=>panic!("Something unexpected in input password")
+                    };
+
+                    let mut final_str = String::from("");
+
+                    for c in pass.chars(){
+                        if c == '\r' || c == '\n' {
+                            println!("here \\r and \\n")
+                        }else{
+                           final_str.push(c);
+                        }
+                    };
+
+                //    println!("{}",pass);
+
+                    let key_val = final_str.as_bytes();
+
+
+
+                    //let key_val = "Thats my Kung Fu".as_bytes();
                     let mut vec_key = Vec::new();
                     for &byte in key_val.iter(){
                         vec_key.push(byte);
@@ -184,7 +265,7 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
                  
                  cipher.encrypt_block(&mut block);
 
-                 let mut new_file = OpenOptions::new().append(true).open(directory.clone()+"/configure.dat")?;
+                 let mut new_file = OpenOptions::new().write(true).open(directory.clone()+"/configure.dat")?;
 
 
                      if let Err(err) =  new_file.write_all(&block){
@@ -200,12 +281,10 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
 
                        }
 
-    let args:Vec<String> = env::args().collect();
+//      dbg!(&args);
+//   print!("{}",args.iter().count());
 
-    // dbg!(&args);
-    // print!("{}",args.iter().count());
-
-    if args.iter().count() == 1{
+    if args.iter().count() == 2{
 
         println!("                                                        ..                    
         ./((###########(/                   /(###############(/            
