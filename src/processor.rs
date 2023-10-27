@@ -13,6 +13,8 @@ use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
     generic_array::{GenericArray,typenum::U16},
 };
 
+use crate::routes::put_routes::{put_one};
+
 use crate::routes::get_routes::{get_all, get_many, get_one, get_custom_filter};
 use crate::input_filter_engine::query_filter;
 
@@ -20,7 +22,7 @@ pub fn processor() -> Result<Rocket<Build>,Box<dyn Error>>{
  
 let args:Vec<String> = env::args().collect();
 
-let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/hadron/.data/configure");
+let directory = String::from("/home/qubit/Documents/hadron/.data/configure");
 
     let files = match fs::read_dir(&directory){
         Ok(val)=> {val},
@@ -219,7 +221,7 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
    // println!("len:{}",length);
     if length == 0 {
 
-                    match File::create("C:/Users/Acer/OneDrive/Documents/Everything_rust/hadron/.data/configure/configure.dat") {
+                    match File::create("/home/qubit/Documents/hadron/.data/configure/configure.dat") {
                     Ok(_)=> (),
                     Err(err)=> panic!("Failed to create file: {err}")
                     };
@@ -333,8 +335,9 @@ let directory = String::from("C:/Users/Acer/OneDrive/Documents/Everything_rust/h
     }
 
     if args[1].to_string() == String::from("powerup") {
-        Ok(rocket::build().mount("/get", routes![get_one,get_all,get_many,get_custom_filter]))
+        Ok(rocket::build().mount("/get", routes![get_one,get_all,get_many,get_custom_filter]).mount("/put",routes![put_one]))     
     }
+
     else{
             process::exit(0);
 
