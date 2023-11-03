@@ -111,6 +111,41 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
 
     }
 
+
+    //Now the file or model exists so, we are going to go through files
+    //searching for initially established config file to specific models
+   
+//    let mut established_model_schema: Json;
+
+    const config_file_location: &str = "./";
+
+    let dirRead = fs::read_dir(config_file_location).expect("diretory read failed");
+//    println!("{}",dirRead.count());
+    for file in dirRead{
+            
+//        println!("{:?}",file.expect("error reading file").path());
+
+        let mut config_file_path = file.expect("error while reading filr").path();
+
+        let config_file_arr = config_file_path.to_str().expect("error while converting to str").split("/").collect::<Vec<&str>>();
+
+        println!("{:?}",config_file_arr.last());
+
+
+        if (collection.to_lowercase().clone()+"_config.json") == config_file_arr.last().unwrap().to_string(){
+    
+            println!("Found the config file!!");
+
+
+        
+
+
+        }
+        
+
+
+    }
+
     let res = PutStandardResponse{
         status: 200,
         response: ResponseStatus::Success
