@@ -1,5 +1,6 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
 use std::fs;
+use serde_json::{Value};
 
 
 #[derive(Debug,Clone,FromForm,Serialize,Deserialize)]
@@ -129,15 +130,41 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
 
         let config_file_arr = config_file_path.to_str().expect("error while converting to str").split("/").collect::<Vec<&str>>();
 
-        println!("{:?}",config_file_arr.last());
+//        println!("{:?}",config_file_arr.last());
 
+        let config_file_exact = config_file_arr.last().unwrap().to_string();
+        
+        // Well I kinda forgot that we also have a normal schema which is in the non-config file
+        // so we could have equated to that too, but anyways we will read botht the schema file and
+        // the config file
 
-        if (collection.to_lowercase().clone()+"_config.json") == config_file_arr.last().unwrap().to_string(){
+        if (collection.to_lowercase().clone()+"_config.json") == config_file_exact{
     
             println!("Found the config file!!");
 
+            println!("{}",&config_file_exact);
+//            println!("{}",format!("./{}.json",&collection.to_lowercase()));
 
-        
+            let readFileConf = String::from_utf8(fs::read(format!("./{}", &config_file_exact)).unwrap()).unwrap();
+            let readFileSchema = String::from_utf8(fs::read(format!("./{}.json", &collection.to_lowercase())).unwrap()).unwrap();
+
+            
+    //         println!("{:?}", readFileConf);
+ //           println!("{:?}", readFileSchema);
+            
+            let readFileConf_jsonified: Value = serde_json::from_str(&readFileConf).unwrap();
+            println!("{:?}", readFileConf_jsonified);
+           
+            let readFileSchema_jsonified: Value = serde_json::from_str(&readFileSchema).unwrap();
+            println!("{:?}", readFileSchema_jsonified);
+//            println!("{:?}", readFileSchema_jsonified["age"]["type"]);
+
+
+            // 1.)Now below this section is supposed to be input value field and type checking
+            // 2.)Encrypting by applying padding (total bytes%16, remainder + (16-remainder) =>
+            //   which will be the padding)
+            // 3.) Decrypting back jsut to check if worked properly
+
 
 
         }
