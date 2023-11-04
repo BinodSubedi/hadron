@@ -1,6 +1,8 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
 use std::fs;
 use serde_json::{Value};
+use std::ops::Deref;
+extern crate regex;
 
 
 #[derive(Debug,Clone,FromForm,Serialize,Deserialize)]
@@ -27,6 +29,82 @@ pub struct PutStandardResponse{
 
 
 }
+
+// Creating a trait to be implemented to PutStandardInputFormat
+// for converting plain string to jsonifyable data format
+
+trait Jsonifyable {
+
+    fn changeMe(&self)-> String;
+
+     //   let fitered_list: Vec<&str> = self.data.split(",").collect::vec<&str>();
+
+
+}
+
+
+impl Jsonifyable for PutStandardInputFormat<'_>{
+
+    fn changeMe(&self)-> String{
+            
+       // let filtered_list: Vec<&str> = self.data.split(",").collect::<Vec<&str>>();
+        
+        //println!("{:?}", filtered_list);
+
+
+        let regex_pattern = regex::Regex::new(r"[,{}]").unwrap();
+        let list_all: Vec<&str> = regex_pattern.split(self.data).collect();
+            
+        //println!("{:?}", list_all);
+
+        let cleared_out_string_vec = &list_all[1..(list_all.len()-1)];
+
+      //  println!("{:?}", cleared_out_string_vec);
+
+        
+        let mut final_val = String::from(r#"{"#);
+
+
+        for (i,val) in cleared_out_string_vec.iter().enumerate(){
+            
+            let splitted_unit: Vec<_> = val.split(":").collect();
+            
+            let referenced = &mut final_val;
+
+            println!("index_here:{i}");
+
+            if i != (cleared_out_string_vec.len()-1) {
+            
+                *referenced  += format!(r#""{}":"{}","#,splitted_unit[0],splitted_unit[1]).as_str();
+
+            }else{
+
+                *referenced  += format!(r#""{}":"{}""#,splitted_unit[0],splitted_unit[1]).as_str();
+           
+
+        }
+
+
+
+
+
+            }
+
+        final_val += "}";
+
+       println!("{:?}", final_val);
+
+        
+
+        final_val
+
+    }
+
+
+}
+
+
+
 
 
 #[put("/<collection>",format = "json",data="<body>")]
@@ -164,6 +242,20 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
             // 2.)Encrypting by applying padding (total bytes%16, remainder + (16-remainder) =>
             //   which will be the padding)
             // 3.) Decrypting back jsut to check if worked properly
+
+                
+           // println!("{:?}", body);
+
+
+           // let itterable_body_data:Value = serde_json::from_str(&body.data).unwrap();
+           // let itterable_body_data = &body.deref();
+            let itterable_body_data = &body.deref().clone();
+ 
+            println!("{:?}", &itterable_body_data.changeMe());
+           
+            let itterable_final_val:Value = serde_json::from_str(&itterable_body_data.changeMe()).unwrap();
+
+            println!("{:?}", itterable_final_val);
 
 
 
