@@ -1,9 +1,10 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
 use std::fs;
+use std::collections::HashMap;
 use serde_json::{Value};
 use std::ops::Deref;
 extern crate regex;
-
+use crate::input_and_schema_compare::comparer; 
 
 #[derive(Debug,Clone,FromForm,Serialize,Deserialize)]
 #[serde(crate = "rocket::serde")]
@@ -35,7 +36,7 @@ pub struct PutStandardResponse{
 
 trait Jsonifyable {
 
-    fn changeMe(&self)-> String;
+    fn changeMe(&self)-> HashMap<String,String>;
 
      //   let fitered_list: Vec<&str> = self.data.split(",").collect::vec<&str>();
 
@@ -45,7 +46,7 @@ trait Jsonifyable {
 
 impl Jsonifyable for PutStandardInputFormat<'_>{
 
-    fn changeMe(&self)-> String{
+    fn changeMe(&self)-> HashMap<String,String>{
             
        // let filtered_list: Vec<&str> = self.data.split(",").collect::<Vec<&str>>();
         
@@ -62,7 +63,7 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
       //  println!("{:?}", cleared_out_string_vec);
 
         
-        let mut final_val = String::from(r#"{"#);
+        let mut final_val = HashMap::new();
 
 
         for (i,val) in cleared_out_string_vec.iter().enumerate(){
@@ -73,16 +74,10 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
 
             println!("index_here:{i}");
 
-            if i != (cleared_out_string_vec.len()-1) {
             
-                *referenced  += format!(r#""{}":"{}","#,splitted_unit[0],splitted_unit[1]).as_str();
+             //   *referenced  += format!(r#""{}":"{}","#,splitted_unit[0],splitted_unit[1]).as_str();
+                final_val.insert(splitted_unit[0].to_string(),splitted_unit[1].to_string());
 
-            }else{
-
-                *referenced  += format!(r#""{}":"{}""#,splitted_unit[0],splitted_unit[1]).as_str();
-           
-
-        }
 
 
 
@@ -90,7 +85,6 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
 
             }
 
-        final_val += "}";
 
        println!("{:?}", final_val);
 
@@ -199,16 +193,16 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
     const config_file_location: &str = "./";
 
     let dirRead = fs::read_dir(config_file_location).expect("diretory read failed");
-//    println!("{}",dirRead.count());
+    println!("something");
     for file in dirRead{
             
-//        println!("{:?}",file.expect("error reading file").path());
+     //   println!("{:?}",file.expect("error reading file").path());
 
         let mut config_file_path = file.expect("error while reading filr").path();
 
         let config_file_arr = config_file_path.to_str().expect("error while converting to str").split("/").collect::<Vec<&str>>();
 
-//        println!("{:?}",config_file_arr.last());
+      //  println!("{:?}",config_file_arr.last());
 
         let config_file_exact = config_file_arr.last().unwrap().to_string();
         
@@ -244,7 +238,7 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
             // 3.) Decrypting back jsut to check if worked properly
 
                 
-           // println!("{:?}", body);
+        //    println!("{:?}", body);
 
 
            // let itterable_body_data:Value = serde_json::from_str(&body.data).unwrap();
@@ -253,10 +247,12 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
  
             println!("{:?}", &itterable_body_data.changeMe());
            
-            let itterable_final_val:Value = serde_json::from_str(&itterable_body_data.changeMe()).unwrap();
+            let itterable_final_val = itterable_body_data.changeMe();
 
             println!("{:?}", itterable_final_val);
-
+            
+            comparer::schema_comparer(itterable_final_val,readFileSchema_jsonified); 
+            
 
 
         }
