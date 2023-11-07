@@ -1,15 +1,38 @@
 use serde_json::Value;
-use std::collections::HashMap;
 
-pub fn schema_comparer(input:HashMap<String,String>, schema:Value){
+pub fn schema_comparer(input:Value, schema:Value){
+    
+
+    println!("{:?}", schema);
 
 
-    for (k,v) in input{
-        
-        println!{"Key is:{},and value goes as:{}", k,v}
+
+    if let Value::Object(obj) = schema{
+
+            
+        for (k,v) in obj.iter(){
+            
+            match v{
+                    
+                Value::String(s)=>{
+                    println!("{}",s);
+                }
+
+                _=>{
+                
+                    println!("{:?}",v)
+
+                }
+
+
+            }
+
+
+
+        }
+
 
     }
-
 
 
 }

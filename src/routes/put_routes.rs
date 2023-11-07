@@ -40,37 +40,139 @@ trait Jsonifyable {
 
      //   let fitered_list: Vec<&str> = self.data.split(",").collect::vec<&str>();
 
+    fn comma_formatter(&self)-> String;
 
 }
 
 
 impl Jsonifyable for PutStandardInputFormat<'_>{
+    
+    fn comma_formatter(&self)-> String{
+
+        // now need to split by comma in the outer most layer
+        
+        let mut comma_level_state = 0;
+
+        let mut final_string = String::from("");
+
+        for char in self.data.chars(){
+            
+            match char {
+                    
+                '{'|'['=>{
+                    
+                    final_string.push(char);
+            
+                }
+
+                ':' | ']' | '}' | ','=>{
+                    if comma_level_state == 1{ 
+                    comma_level_state -= 1;
+                    final_string.push('"');
+                    final_string.push(char);
+                    }else{
+
+                    final_string.push(char);
+
+                    }
+
+
+                }
+
+                _=>{
+                    if comma_level_state == 0{
+                        
+                        final_string.push('"');
+                        final_string.push(char);
+                        comma_level_state += 1;
+
+                    }else{
+                        
+                        final_string.push(char);
+
+                    }
+
+
+
+                }
+
+
+
+            }
+
+           
+
+        }
+
+            
+        final_string
+
+    }
 
     fn changeMe(&self)-> HashMap<String,String>{
             
        // let filtered_list: Vec<&str> = self.data.split(",").collect::<Vec<&str>>();
         
-        //println!("{:?}", filtered_list);
-
-
-        let regex_pattern = regex::Regex::new(r"[,{}]").unwrap();
-        let list_all: Vec<&str> = regex_pattern.split(self.data).collect();
+        println!("normal-data{:?}", self.data);
             
-        //println!("{:?}", list_all);
+        
+        let mut changed_few = String::from("");
+
+        for char in self.data.chars(){
+            
+           // println!("{}",char);
+
+            if char != '"'{
+
+                let val = &mut changed_few;
+            
+                *val+= &char.to_string();
+            
+            }
+
+        }
+
+        println!("{}",changed_few);
+
+        let regex_pattern = regex::Regex::new(r"[,{}:]").unwrap();
+        let list_all: Vec<&str> = regex_pattern.split(&changed_few).collect();
+            
+        println!("{:?}", list_all);
 
         let cleared_out_string_vec = &list_all[1..(list_all.len()-1)];
 
-      //  println!("{:?}", cleared_out_string_vec);
+       println!("{:?}", cleared_out_string_vec);
 
         
         let mut final_val = HashMap::new();
+        
+        let mut counter = 0;
+
+        loop{
+
+            println!("counter-breakPoint:{}",cleared_out_string_vec.len());    
+
+            if counter >= (cleared_out_string_vec.len()-1){
+                
+                break;
+
+            }
+
+            //let referenced = &mut final_val;
+
+            final_val.insert(cleared_out_string_vec[counter].to_string(), cleared_out_string_vec[counter+1].to_string());
+
+            counter = counter + 2;
+            println!("{}",counter);
 
 
-        for (i,val) in cleared_out_string_vec.iter().enumerate(){
+        }
+
+       /* for inside in cleared_out_string_vec.iter().enumerate(){
             
-            let splitted_unit: Vec<_> = val.split(":").collect();
+           // let splitted_unit: Vec<_> = val.split(":").collect();
             
-            let referenced = &mut final_val;
+           // let referenced = &mut final_val;
 
             println!("index_here:{i}");
 
@@ -83,10 +185,10 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
 
 
 
-            }
+            }  */
 
 
-       println!("{:?}", final_val);
+       println!("final___{:?}", final_val);
 
         
 
@@ -225,11 +327,29 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
  //           println!("{:?}", readFileSchema);
             
             let readFileConf_jsonified: Value = serde_json::from_str(&readFileConf).unwrap();
-            println!("{:?}", readFileConf_jsonified);
+
+            
+
+ //           println!("{:?}", readFileConf_jsonified.changeMe());
            
             let readFileSchema_jsonified: Value = serde_json::from_str(&readFileSchema).unwrap();
-            println!("{:?}", readFileSchema_jsonified);
+
+/*
+
+            if let Value::Object(obj) = cheking_context{
+                
+                for (k,v) in obj.iter() {
+                    
+                    println!("If this works I will look very stupid:{},{}",k,v);
+
+                }
+
+            }
+
+*/
+ //           println!("{:?}", readFileSchema_jsonified.changeMe());
 //            println!("{:?}", readFileSchema_jsonified["age"]["type"]);
+//
 
 
             // 1.)Now below this section is supposed to be input value field and type checking
@@ -239,19 +359,22 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
 
                 
         //    println!("{:?}", body);
-
-
-           // let itterable_body_data:Value = serde_json::from_str(&body.data).unwrap();
-           // let itterable_body_data = &body.deref();
-            let itterable_body_data = &body.deref().clone();
- 
-            println!("{:?}", &itterable_body_data.changeMe());
-           
-            let itterable_final_val = itterable_body_data.changeMe();
-
-            println!("{:?}", itterable_final_val);
+        //
+        //
+                
             
-            comparer::schema_comparer(itterable_final_val,readFileSchema_jsonified); 
+
+
+            let value_input = body.deref().comma_formatter();
+
+
+            let itterable_body_data:Value = serde_json::from_str(&value_input).unwrap();
+           // let itterable_body_data = &body.deref();
+ 
+           
+
+            
+            comparer::schema_comparer(itterable_body_data,readFileSchema_jsonified); 
             
 
 
