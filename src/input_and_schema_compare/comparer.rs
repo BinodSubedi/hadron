@@ -1,4 +1,5 @@
 use serde_json::Value;
+use std::process;
 
 pub fn schema_comparer(input:Value, schema:Value){
     
@@ -18,10 +19,26 @@ pub fn schema_comparer(input:Value, schema:Value){
                     println!("{}",s);
                 }
 
-                _=>{
-                
-                    println!("{:?}",v)
+                Value::Object(ob)=>{
 
+                    println!("{:?}",ob);
+                
+                    println!("{:?}", ob.get("type"));                    
+
+                    if let Value::String(value) = ob.get("type").unwrap(){
+                        
+                    
+                        println!("{}",value);
+
+
+                    }
+
+                }
+
+
+                _=> {
+
+                    process::exit(0);
                 }
 
 
