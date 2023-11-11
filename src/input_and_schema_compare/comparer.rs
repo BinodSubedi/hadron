@@ -16,7 +16,19 @@ pub fn schema_comparer(input:Value, schema:Value){
             match v{
                     
                 Value::String(s)=>{
-                    println!("{}",s);
+                    println!("value of s:{}",s);
+                    
+                if let Value::String(value) = input.get(k).unwrap(){
+                    
+                    if s.to_lowercase() == "number"{
+                        
+                        value.parse::<i32>().unwrap();
+
+                    } 
+
+
+                }
+                
                 }
 
                 Value::Object(ob)=>{
@@ -29,6 +41,33 @@ pub fn schema_comparer(input:Value, schema:Value){
                         
                     
                         println!("{}",value);
+
+                        println!("{:?}",input.get(k).unwrap());
+
+                        if value.to_lowercase() == "string"{
+                        
+
+                            println!("string type here{:?}",input.get(k).unwrap().is_string());
+
+
+
+                        }else if value.to_lowercase() == "number" {
+
+                                
+                             println!("Number type here{:?}",input.get(k).unwrap().is_string());                               
+
+                            
+                             if let Value::String(number_val) = input.get(k).unwrap(){
+
+                            
+                                 number_val.parse::<i32>().unwrap();
+                                    
+                             }
+
+                        }  
+
+                            
+
 
 
                     }
@@ -51,6 +90,9 @@ pub fn schema_comparer(input:Value, schema:Value){
 
     }
 
+    // Now checking the type wether it's number, string or comply with model is done, Now it's time
+    // to send it to encryption method and add padding if needed and store
+    // Also, need to add array type for later
 
 }
 
