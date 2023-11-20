@@ -5,6 +5,7 @@ mod input_filter_engine;
 mod processor;
 mod input_and_schema_compare;
 mod routes;
+mod padd_encrypt_persist;
 
 #[launch]
 fn rocket() -> _ {

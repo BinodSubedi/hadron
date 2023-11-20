@@ -1,7 +1,8 @@
 use serde_json::Value;
+use crate::padd_encrypt_persist::padd_encrypt_persist;
 use std::process;
 
-pub fn schema_comparer(input:Value, schema:Value){
+pub fn schema_comparer(input:Value, schema:Value, raw:String){
     
 
     println!("{:?}", schema);
@@ -77,7 +78,7 @@ pub fn schema_comparer(input:Value, schema:Value){
 
                 _=> {
 
-                    process::exit(0);
+                    panic!("There seems to be some problem with input format!");
                 }
 
 
@@ -93,6 +94,9 @@ pub fn schema_comparer(input:Value, schema:Value){
     // Now checking the type wether it's number, string or comply with model is done, Now it's time
     // to send it to encryption method and add padding if needed and store
     // Also, need to add array type for later
+
+
+    padd_encrypt_persist(raw);
 
 }
 

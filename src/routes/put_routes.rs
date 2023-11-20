@@ -374,7 +374,7 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
            
 
             
-            comparer::schema_comparer(itterable_body_data,readFileSchema_jsonified); 
+            comparer::schema_comparer(itterable_body_data,readFileSchema_jsonified, value_input); 
             
 
 
