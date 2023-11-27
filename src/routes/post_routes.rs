@@ -279,13 +279,25 @@ pub async fn put_one(collection:String, body:Json<PostStandardInputFormat>)-> Js
             let value_input = body.deref().comma_formatter();
 
 
-            let itterable_body_data:Value = serde_json::from_str(&value_input).unwrap();
+            let mut input_value_json_formatted : Vec<Value>  = Vec::new();
+
+            for val in value_input{
+
+
+             let itterable_body_data:Value = serde_json::from_str(&val).unwrap();               
+
+             input_value_json_formatted.push(itterable_body_data);
+
+
+            }
+
+
            // let itterable_body_data = &body.deref();
  
            
 
             
-            comparer::schema_comparer(itterable_body_data,readFileSchema_jsonified, value_input); 
+            comparer::schema_comparer(input_value_json_formatted,readFileSchema_jsonified, value_input); 
             
 
 

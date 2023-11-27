@@ -9,13 +9,20 @@ use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
 use std::env;
 
 
-pub fn padd_encrypt_persist(input: String){
+pub fn padd_encrypt_persist(input_initial: Vec<String>){
 
-    padd(input);
+    // It is a good idea to perform these tasks individually because
+    // we also need to see the total capacity of exisiting written file, total capacity=68
+
+    for input in input_initial{
+        
+        padd_and_init(input);
+
+    }
 }
 
 
-fn padd(raw: String){
+fn padd_and_init(raw: String){
 
     println!("raw:{}",raw);
     /*
