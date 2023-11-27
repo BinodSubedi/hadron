@@ -39,26 +39,29 @@ pub struct PostStandardInputFormat{
 
 trait Jsonifyable {
 
-    fn changeMe(&self)-> HashMap<String,String>;
 
-     //   let fitered_list: Vec<&str> = self.data.split(",").collect::vec<&str>();
-
-    fn comma_formatter(&self)-> String;
+    fn comma_formatter(&self)-> Vec<String>;
 
 }
 
 
 impl Jsonifyable for PostStandardInputFormat{
     
-    fn comma_formatter(&self)-> String{
+    fn comma_formatter(&self)-> Vec<String>{
 
         // now need to split by comma in the outer most layer
+        // since it is post request modified version, we need to loop in the vector of strings of
+        // data
+
+        let mut returner: Vec<String> = Vec::new();
+
+        for val in self.data{
         
         let mut comma_level_state = 0;
 
         let mut final_string = String::from("");
 
-        for char in self.data.chars(){
+        for char in val.chars(){
             
             match char {
                     
@@ -108,96 +111,15 @@ impl Jsonifyable for PostStandardInputFormat{
         }
 
             
-        final_string
+      returner.push(final_string);
+    }
+
+
+        returner
 
     }
 
-    fn changeMe(&self)-> HashMap<String,String>{
-            
-       // let filtered_list: Vec<&str> = self.data.split(",").collect::<Vec<&str>>();
-        
-        println!("normal-data{:?}", self.data);
-            
-        
-        let mut changed_few = String::from("");
-
-        for char in self.data.chars(){
-            
-           // println!("{}",char);
-
-            if char != '"'{
-
-                let val = &mut changed_few;
-            
-                *val+= &char.to_string();
-            
-            }
-
-        }
-
-        println!("{}",changed_few);
-
-        let regex_pattern = regex::Regex::new(r"[,{}:]").unwrap();
-        let list_all: Vec<&str> = regex_pattern.split(&changed_few).collect();
-            
-        println!("{:?}", list_all);
-
-        let cleared_out_string_vec = &list_all[1..(list_all.len()-1)];
-
-       println!("{:?}", cleared_out_string_vec);
-
-        
-        let mut final_val = HashMap::new();
-        
-        let mut counter = 0;
-
-        loop{
-
-            println!("counter-breakPoint:{}",cleared_out_string_vec.len());    
-
-            if counter >= (cleared_out_string_vec.len()-1){
-                
-                break;
-
-            }
-
-            //let referenced = &mut final_val;
-
-            final_val.insert(cleared_out_string_vec[counter].to_string(), cleared_out_string_vec[counter+1].to_string());
-
-            counter = counter + 2;
-            println!("{}",counter);
-
-
-        }
-
-       /* for inside in cleared_out_string_vec.iter().enumerate(){
-            
-           // let splitted_unit: Vec<_> = val.split(":").collect();
-            
-           // let referenced = &mut final_val;
-
-            println!("index_here:{i}");
-
-            
-             //   *referenced  += format!(r#""{}":"{}","#,splitted_unit[0],splitted_unit[1]).as_str();
-                final_val.insert(splitted_unit[0].to_string(),splitted_unit[1].to_string());
-
-
-
-
-
-
-            }  */
-
-
-       println!("final___{:?}", final_val);
-
-        
-
-        final_val
-
-    }
+    
 
 
 }
