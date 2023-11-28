@@ -108,7 +108,7 @@ pub fn schema_comparer_many(input_list:Vec<Value>, schema:Value, raw:Vec<String>
     for input in input_list{
 
 
-    if let Value::Object(obj) = schema{
+    if let Value::Object(ref obj) = schema{
 
             
         for (k,v) in obj.iter(){

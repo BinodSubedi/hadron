@@ -55,7 +55,7 @@ impl Jsonifyable for PostStandardInputFormat{
 
         let mut returner: Vec<String> = Vec::new();
 
-        for val in self.data{
+        for val in &self.data{
         
         let mut comma_level_state = 0;
 
@@ -281,7 +281,7 @@ pub async fn put_one(collection:String, body:Json<PostStandardInputFormat>)-> Js
 
             let mut input_value_json_formatted : Vec<Value>  = Vec::new();
 
-            for val in value_input{
+            for val in &value_input{
 
 
              let itterable_body_data:Value = serde_json::from_str(&val).unwrap();               
@@ -297,7 +297,7 @@ pub async fn put_one(collection:String, body:Json<PostStandardInputFormat>)-> Js
            
 
             
-            comparer::schema_comparer(input_value_json_formatted,readFileSchema_jsonified, value_input); 
+            comparer::schema_comparer_many(input_value_json_formatted,readFileSchema_jsonified, value_input); 
             
 
 
