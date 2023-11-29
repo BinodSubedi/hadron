@@ -53,16 +53,40 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
         
         let mut comma_level_state = 0;
 
+        let mut curly_braces_level = 0;
+
         let mut final_string = String::from("");
 
         for char in self.data.chars(){
             
             match char {
                     
-                '{'|'['=>{
+                '{'=>{
                     
                     final_string.push(char);
+                    if curly_braces_level == 0 {
+                        
+                        //here goes all the logic for putting id:uuid+glue($)+superposition factor
+                       //and a comma at last
+                    
+                        let id = uuid::Uuid::new_v4();
+
+                        let final_id_struct = String::from("id:") + &id.to_string()+",";
+                        * &mut final_string += &final_id_struct;
+                        
+                       
+
+
+                    }
+
+                    curly_braces_level += 1;
             
+                }
+
+                '['=>{
+                    
+                    final_string.push(char);                    
+
                 }
 
                 ':' | ']' | '}' | ','=>{
@@ -99,6 +123,7 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
 
 
             }
+            
 
            
 

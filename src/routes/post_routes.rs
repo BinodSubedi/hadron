@@ -1,10 +1,10 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
 use std::fs;
-use std::collections::HashMap;
 use serde_json::{Value};
 use std::ops::Deref;
 extern crate regex;
 extern crate uuid;
+use uuid::Uuid;
 use crate::input_and_schema_compare::comparer; 
 
 
@@ -71,12 +71,12 @@ impl Jsonifyable for PostStandardInputFormat{
                 '{'=>{
                     
                     final_string.push(char);
-                    if(curly_braces_level == 0){
+                    if curly_braces_level == 0 {
                         
                         //here goes all the logic for putting id:uuid+glue($)+superposition factor
                        //and a comma at last
                     
-                        let id = uuid::Uuid::new_v4();
+                        let id = Uuid::new_v4();
 
                         let final_id_struct = String::from("id:") + &id.to_string()+",";
                         * &mut final_string += &final_id_struct;
