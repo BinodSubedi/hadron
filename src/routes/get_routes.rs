@@ -1,3 +1,14 @@
+use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
+use std::fs;
+use std::collections::HashMap;
+use serde_json::{Value};
+use std::ops::Deref;
+extern crate regex;
+use crate::input_and_schema_compare::comparer; 
+
+
+
+
 #[get("/<collection>")]
 pub async fn get_all(collection:String)-> String{
    format!("The collection of choice for whole query is {}",collection)   
