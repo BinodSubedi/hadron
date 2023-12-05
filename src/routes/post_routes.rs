@@ -33,7 +33,7 @@ pub struct PostStandardResponse{
 #[serde(crate="rocket::serde")]
 pub struct PostStandardInputFormat{
     
-    pub data: Vec<String>,
+    pub data: Value,
 
 }
 
@@ -45,7 +45,7 @@ trait Jsonifyable {
 
 }
 
-
+/*
 impl Jsonifyable for PostStandardInputFormat{
     
     fn comma_formatter(&self)-> Vec<String>{
@@ -78,7 +78,7 @@ impl Jsonifyable for PostStandardInputFormat{
                     
                         let id = Uuid::new_v4();
 
-                        let final_id_struct = String::from("id:") + &id.to_string()+",";
+                        let final_id_struct = String::from("id") + &id.to_string()+",";
                         * &mut final_string += &final_id_struct;
                         
                        
@@ -148,6 +148,7 @@ impl Jsonifyable for PostStandardInputFormat{
 
 
 }
+*/
 
 
 
@@ -173,6 +174,7 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
 
   //  println!("{:?}", files.by_ref().count());
 
+    let mut total_file_num = 0;
 
     for file in files{
 
@@ -195,12 +197,18 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
 
         println!("{}", collection.to_lowercase());
 
-        if name_splitted[0] == collection.to_lowercase().as_str(){
+        
+
+        if name_splitted[0].split('-').collect::<Vec<&str>>()[0] == collection.to_lowercase().as_str(){
+
+           total_file_num += 1;
 
            required_model_file = Some(name_splitted[0].to_string());
             println!("matched");
-            break;
 
+            //Didn't break here cause we need to find exactly the number of files where the data
+            //are stored and use our magic number(super-position factor) to have a more probable
+            //pinpoint to the data
         }
 
             
@@ -227,6 +235,8 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
     //searching for initially established config file to specific models
    
 //    let mut established_model_schema: Json;
+
+    println!("total_number_of_files{:?}",total_file_num);
 
     const config_file_location: &str = "./";
 
@@ -301,20 +311,33 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
             
 
 
-            let value_input = body.deref().comma_formatter();
+            //let value_input = body.deref().comma_formatter();
 
 
-            let mut input_value_json_formatted : Vec<Value>  = Vec::new();
 
-            for val in &value_input{
+            let mut input_value_raw_formatted : Vec<String>  = Vec::new();
+
+            if let Value::Array(ref value_input) =&body.data{
 
 
-             let itterable_body_data:Value = serde_json::from_str(&val).unwrap();               
+            for val in value_input{
 
-             input_value_json_formatted.push(itterable_body_data);
+
+//`          let itterable_body_data:Value = serde_json::from_str(&val).unwrap();               
+             let raw_value_unit = Value::to_string(val);
+
+             input_value_raw_formatted.push(raw_value_unit);
 
 
             }
+
+
+            }
+            
+
+            println!("{:?}", input_value_raw_formatted);
+
+            
 
 
            // let itterable_body_data = &body.deref();
@@ -322,7 +345,7 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
            
 
             
-            comparer::schema_comparer_many(input_value_json_formatted,readFileSchema_jsonified, value_input); 
+            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified, input_value_raw_formatted); 
             
 
 

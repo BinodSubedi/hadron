@@ -100,12 +100,16 @@ pub fn schema_comparer(input:Value, schema:Value, raw:String){
 
 }
 
-pub fn schema_comparer_many(input_list:Vec<Value>, schema:Value, raw:Vec<String>){
+pub fn schema_comparer_many(input_list:Value, schema:Value, raw:Vec<String>){
     
 
     println!("{:?}", schema);
 
-    for input in input_list{
+    if let Value::Array(input_list_values) = input_list{
+
+
+
+    for input in input_list_values{
 
 
     if let Value::Object(ref obj) = schema{
@@ -191,6 +195,9 @@ pub fn schema_comparer_many(input_list:Vec<Value>, schema:Value, raw:Vec<String>
     }
 
 }
+
+    }
+
 
     // Now checking the type wether it's number, string or comply with model is done, Now it's time
     // to send it to encryption method and add padding if needed and store
