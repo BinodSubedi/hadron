@@ -6,10 +6,13 @@ use std::ops::Deref;
 extern crate regex;
 use crate::input_and_schema_compare::comparer; 
 
-#[derive(Debug,Clone,FromForm,Serialize,Deserialize)]
-#[serde(crate = "rocket::serde")]
-pub struct PutStandardInputFormat<'a>{
-    data: &'a str,
+
+#[derive(Debug,Clone,Deserialize,Serialize)]
+#[serde(crate="rocket::serde")]
+pub struct PutStandardInputFormat{
+    
+    pub data: Value,
+
 }
 
 
@@ -33,7 +36,7 @@ pub struct PutStandardResponse{
 
 // Creating a trait to be implemented to PutStandardInputFormat
 // for converting plain string to jsonifyable data format
-
+/*
 trait Jsonifyable {
 
     fn changeMe(&self)-> HashMap<String,String>;
@@ -223,13 +226,14 @@ impl Jsonifyable for PutStandardInputFormat<'_>{
 
 
 }
+*/
 
 
 
 
 
 #[put("/<collection>",format = "json",data="<body>")]
-pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)-> Json<PutStandardResponse>{
+pub async fn put_one(collection:String, body:Json<PutStandardInputFormat>)-> Json<PutStandardResponse>{
 //pub async fn put_one(collection:String, form:Form<PutStandardInputFormat<'_>>)-> Json<PutStandardResponse>{
     //println!("{:?}",form);
      
@@ -256,6 +260,7 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
       
     let mut required_model_file:Option<String> = None;
 
+    let mut total_number_of_files = 0;
 
     //by the way this by_ref as took the value out of the files so may want to look into this
     //sometime soon
@@ -284,11 +289,12 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
 
         println!("{}", collection.to_lowercase());
 
-        if name_splitted[0] == collection.to_lowercase().as_str(){
+        if name_splitted[0].split('-').collect::<Vec<&str>>()[0] == collection.to_lowercase().as_str(){
 
            required_model_file = Some(name_splitted[0].to_string());
             println!("matched");
-            break;
+            
+            total_number_of_files +=1;
 
         }
 
@@ -310,6 +316,8 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
 
 
     }
+
+    println!("total_files{:?}",total_number_of_files);
 
 
     //Now the file or model exists so, we are going to go through files
@@ -390,16 +398,16 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat<'_>>)->
             
 
 
-            let value_input = body.deref().comma_formatter();
+            let value_input_raw = Value::to_string(&body.data);
 
 
-            let itterable_body_data:Value = serde_json::from_str(&value_input).unwrap();
+//            let itterable_body_data:Value = serde_json::from_str(&value_input).unwrap();
            // let itterable_body_data = &body.deref();
  
            
 
             
-            comparer::schema_comparer(itterable_body_data,readFileSchema_jsonified, value_input); 
+            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, value_input_raw); 
             
 
 
