@@ -1,8 +1,7 @@
 use serde_json::Value;
 use crate::padd_encrypt_persist::padd_encrypt_persist;
-use std::process;
 
-pub fn schema_comparer(input:Value, schema:Value, raw:String){
+pub fn schema_comparer(input:Value, schema:Value, raw:String,file_name:String){
     
 
     println!("{:?}", schema);
@@ -96,11 +95,13 @@ pub fn schema_comparer(input:Value, schema:Value, raw:String){
     // Also, need to add array type for later
 
 
-    padd_encrypt_persist(vec![raw]);
+    println!("{}",file_name);
+
+    padd_encrypt_persist(vec![raw],file_name);
 
 }
 
-pub fn schema_comparer_many(input_list:Value, schema:Value, raw:Vec<String>){
+pub fn schema_comparer_many(input_list:Value, schema:Value, raw:Vec<String>,file_name:String){
     
 
     println!("{:?}", schema);
@@ -204,7 +205,7 @@ pub fn schema_comparer_many(input_list:Value, schema:Value, raw:Vec<String>){
     // Also, need to add array type for later
 
 
-    padd_encrypt_persist(raw);
+    padd_encrypt_persist(raw,file_name);
 
 }
 

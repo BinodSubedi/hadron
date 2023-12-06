@@ -1,4 +1,5 @@
 use std::str::from_utf8;
+use std::fs;
 use std::io::{Read, Write};
 use std::fs::{File, OpenOptions};
 use aes::Aes128;
@@ -9,20 +10,20 @@ use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
 use std::env;
 
 
-pub fn padd_encrypt_persist(input_initial: Vec<String>){
+pub fn padd_encrypt_persist(input_initial: Vec<String>, file_name:String){
 
     // It is a good idea to perform these tasks individually because
     // we also need to see the total capacity of exisiting written file, total capacity=68
 
     for input in input_initial{
         
-        padd_and_init(input);
+        padd_and_init(input,file_name.clone());
 
     }
 }
 
 
-fn padd_and_init(raw: String){
+fn padd_and_init(raw: String,file_name:String){
 
     println!("raw:{}",raw);
     /*
@@ -71,14 +72,14 @@ fn padd_and_init(raw: String){
 
     println!("{:?}",blocks_raw);
 
-    encrypt(blocks_raw);
+    encrypt(blocks_raw, file_name);
 
     //println!("value from bytes{:?}", String::from_utf8(blocks_raw).unwrap());
 
    
 }
 
-fn encrypt(text_val_vec:Vec<u8>){
+fn encrypt(text_val_vec:Vec<u8>, file_name:String){
 
  
     let env_variables: Vec<String> = env::args().collect();
@@ -144,19 +145,68 @@ fn encrypt(text_val_vec:Vec<u8>){
 
                    // println!("{:?}",blocks);
 
-                    persist(blocks);
+                    persist(blocks,file_name);
 
 
 
 }
 
 
-fn persist(encrypted_matrix:Vec<GenericArray<u8,U16>>){
+fn persist(encrypted_matrix:Vec<GenericArray<u8,U16>>, file_name:String){
 
+  let mut file_name = file_name;
 
   let directory = String::from("/home/qubit/Documents/hadron/.data/data");
 
-  let mut new_file = OpenOptions::new().append(true).open(directory.clone()+"/user.dat").unwrap();
+  //we need to check if number of elements is already complete or not
+  //if not complete just append
+  //if complete, create new file and append
+
+
+
+  let current_chosen_file = fs::read(directory.clone()+"/"+&file_name+".dat").unwrap();
+
+
+  println!("valuesssssss{:?}", current_chosen_file);
+
+  if current_chosen_file.len() >1{
+    
+
+     println!("{}", current_chosen_file.len());
+     
+     let file_seperation = file_name.split('-').collect::<Vec<&str>>();
+
+     println!("checking_num_parsing{:?}", file_seperation[1].parse::<u8>().unwrap());
+
+     if current_chosen_file.len() > (68*16){
+        
+         if file_seperation.len() == 1{
+
+             let _ = File::create(directory.clone()+file_seperation[1]+"-1.dat");
+
+             file_name = file_seperation[1].to_string()+"-1";
+         
+
+         }else{
+
+            
+             let num:String = (file_seperation[1].parse::<u8>().unwrap() + 1).to_string();
+             file_name = file_seperation[1].to_string()+"-"+&num;
+
+         }
+         
+
+        
+
+     }
+
+
+
+  }
+
+
+
+  let mut new_file = OpenOptions::new().append(true).open(directory+"/"+&file_name+".dat").unwrap();
 
 
                     

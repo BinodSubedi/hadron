@@ -404,10 +404,19 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat>)-> Jso
 //            let itterable_body_data:Value = serde_json::from_str(&value_input).unwrap();
            // let itterable_body_data = &body.deref();
  
-           
+           let mut file_name = collection.clone().to_lowercase();
+
+            if total_number_of_files >1{
+                
+                let adder = format!("-{}",total_number_of_files-1);
+
+               * &mut file_name += &adder; 
+
+
+            } 
 
             
-            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, value_input_raw); 
+            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, value_input_raw,file_name); 
             
 
 

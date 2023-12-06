@@ -339,13 +339,25 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
 
             
 
+           let mut file_name = collection.clone().to_lowercase();
+
+            if total_file_num >1{
+                
+                let adder = format!("-{}",total_file_num-1);
+
+               * &mut file_name += &adder; 
+
+
+            } 
+
+
 
            // let itterable_body_data = &body.deref();
  
            
 
             
-            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified, input_value_raw_formatted); 
+            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified, input_value_raw_formatted,file_name); 
             
 
 
