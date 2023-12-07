@@ -34,6 +34,74 @@ pub struct PutStandardResponse{
 
 }
 
+
+ fn raw_id_formatter(values :Vec<String>)-> Vec<String>{
+
+        // now need to split by comma in the outer most layer
+     
+        let mut value_list = Vec::<String>::new();
+
+        for val in values{
+
+        let mut curly_braces_level = 0;
+
+        let mut final_string = String::from("");
+
+
+
+        for char in val.chars(){
+            
+            match char {
+                    
+                '{'=>{
+                    
+                    final_string.push(char);
+                    if curly_braces_level == 0 {
+                        
+                        //here goes all the logic for putting id:uuid+glue($)+superposition factor
+                       //and a comma at last
+                    
+                        let id = uuid::Uuid::new_v4();
+
+                        let final_id_struct = String::from(r#""id":""#) + &id.to_string()+r#"","#;
+                        * &mut final_string += &final_id_struct;
+                        
+                       
+
+
+                    }
+
+                    curly_braces_level += 1;
+            
+                }
+
+                _=>{
+                    
+                    final_string.push(char);                    
+
+                }
+
+
+
+
+            }
+            
+
+           
+
+        }
+
+        value_list.push(final_string);
+        
+        
+            
+        }
+
+
+        value_list
+    }
+
+
 // Creating a trait to be implemented to PutStandardInputFormat
 // for converting plain string to jsonifyable data format
 /*
@@ -396,10 +464,16 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat>)-> Jso
         //
                 
             
+            
+            //below code for converting Value enum type to raw string and down in for loop,
+            //getting the latest file_name
 
 
             let value_input_raw = Value::to_string(&body.data);
 
+            let raw_with_id = raw_id_formatter(vec![value_input_raw]); 
+
+            println!("{:?}", raw_with_id);
 
 //            let itterable_body_data:Value = serde_json::from_str(&value_input).unwrap();
            // let itterable_body_data = &body.deref();
@@ -416,7 +490,7 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat>)-> Jso
             } 
 
             
-            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, value_input_raw,file_name); 
+            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, raw_with_id[0].clone(),file_name); 
             
 
 

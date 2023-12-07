@@ -37,7 +37,73 @@ pub struct PostStandardInputFormat{
 
 }
 
+ fn raw_id_formatter(values :Vec<String>)-> Vec<String>{
 
+        // now need to split by comma in the outer most layer
+     
+        let mut value_list = Vec::<String>::new();
+
+        for val in values{
+
+        let mut curly_braces_level = 0;
+
+        let mut final_string = String::from("");
+
+
+
+        for char in val.chars(){
+            
+            match char {
+                    
+                '{'=>{
+                    
+                    final_string.push(char);
+                    if curly_braces_level == 0 {
+                        
+                        //here goes all the logic for putting id:uuid+glue($)+superposition factor
+                       //and a comma at last
+                    
+                        let id = uuid::Uuid::new_v4();
+                        let final_id_struct = String::from(r#""id":""#) + &id.to_string()+r#"","#;
+                        * &mut final_string += &final_id_struct;
+                        
+                       
+
+
+                    }
+
+                    curly_braces_level += 1;
+            
+                }
+
+                _=>{
+                    
+                    final_string.push(char);                    
+
+                }
+
+
+
+
+            }
+            
+
+           
+
+        }
+
+        value_list.push(final_string);
+        
+        
+            
+        }
+
+
+        value_list
+    }
+
+
+/*
 trait Jsonifyable {
 
 
@@ -45,7 +111,7 @@ trait Jsonifyable {
 
 }
 
-/*
+
 impl Jsonifyable for PostStandardInputFormat{
     
     fn comma_formatter(&self)-> Vec<String>{
@@ -337,7 +403,8 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
 
             println!("{:?}", input_value_raw_formatted);
 
-            
+            let raw_with_id=raw_id_formatter(input_value_raw_formatted);
+
 
            let mut file_name = collection.clone().to_lowercase();
 
@@ -357,7 +424,7 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
            
 
             
-            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified, input_value_raw_formatted,file_name); 
+            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified,raw_with_id,file_name); 
             
 
 
