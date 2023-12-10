@@ -10,20 +10,24 @@ use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
 use std::env;
 
 
-pub fn padd_encrypt_persist(input_initial: Vec<String>, file_name:String){
+pub fn padd_encrypt_persist(input_initial: Vec<String>, file_name:String,total_files_num:usize){
+// It's just fine for now to use file number from different scope
+// but there will be some wierd behaviour if the post was extremely huge so, for that the file
+// count itteration should be handled in the for loop
+//
 
     // It is a good idea to perform these tasks individually because
     // we also need to see the total capacity of exisiting written file, total capacity=68
 
     for input in input_initial{
         
-        padd_and_init(input,file_name.clone());
+        padd_and_init(input,file_name.clone(),total_files_num);
 
     }
 }
 
 
-fn padd_and_init(raw: String,file_name:String){
+fn padd_and_init(raw: String,file_name:String,total_files_num:usize){
 
     println!("raw:{}",raw);
     /*
@@ -72,14 +76,14 @@ fn padd_and_init(raw: String,file_name:String){
 
     println!("{:?}",blocks_raw);
 
-    encrypt(blocks_raw, file_name);
+    encrypt(blocks_raw, file_name,total_files_num);
 
     //println!("value from bytes{:?}", String::from_utf8(blocks_raw).unwrap());
 
    
 }
 
-fn encrypt(text_val_vec:Vec<u8>, file_name:String){
+fn encrypt(text_val_vec:Vec<u8>, file_name:String,total_files_num:usize){
 
  
     let env_variables: Vec<String> = env::args().collect();
@@ -145,14 +149,14 @@ fn encrypt(text_val_vec:Vec<u8>, file_name:String){
 
                    // println!("{:?}",blocks);
 
-                    persist(blocks,file_name);
+                    persist(blocks,file_name,total_files_num);
 
 
 
 }
 
 
-fn persist(encrypted_matrix:Vec<GenericArray<u8,U16>>, file_name:String){
+fn persist(encrypted_matrix:Vec<GenericArray<u8,U16>>, file_name:String,total_files_num:usize){
 
   let mut file_name = file_name;
 
@@ -167,9 +171,9 @@ fn persist(encrypted_matrix:Vec<GenericArray<u8,U16>>, file_name:String){
   let current_chosen_file = fs::read(directory.clone()+"/"+&file_name+".dat").unwrap();
 
 
-  println!("valuesssssss{:?}", current_chosen_file);
+  println!("valuesssssss{:?}", current_chosen_file.len());
 
-  if current_chosen_file.len() >1{
+  if total_files_num >1{
     
 
      println!("{}", current_chosen_file.len());

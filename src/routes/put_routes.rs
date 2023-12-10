@@ -64,6 +64,7 @@ pub struct PutStandardResponse{
                         let id = uuid::Uuid::new_v4();
 
                         let final_id_struct = String::from(r#""id":""#) + &id.to_string()+r#"","#;
+
                         * &mut final_string += &final_id_struct;
                         
                        
@@ -490,7 +491,7 @@ pub async fn put_one(collection:String, body:Json<PutStandardInputFormat>)-> Jso
             } 
 
             
-            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, raw_with_id[0].clone(),file_name); 
+            comparer::schema_comparer(body.data.clone(),readFileSchema_jsonified, raw_with_id[0].clone(),file_name,total_number_of_files); 
             
 
 

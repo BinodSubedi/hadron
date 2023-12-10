@@ -424,7 +424,7 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
            
 
             
-            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified,raw_with_id,file_name); 
+            comparer::schema_comparer_many(body.data.clone(),readFileSchema_jsonified,raw_with_id,file_name,total_file_num); 
             
 
 
