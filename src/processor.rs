@@ -16,6 +16,7 @@ use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
 use crate::routes::delete_routes::delete_one;
 use crate::routes::put_routes::{put_one};
 use crate::routes::post_routes::post_one;
+use crate::routes::patch_routes::patch;
 
 use crate::routes::get_routes::{get_all, get_many, get_one, get_custom_filter};
 use crate::input_filter_engine::query_filter;
@@ -337,7 +338,7 @@ let directory = String::from("/home/qubit/Documents/hadron/.data/configure");
     }
 
     if args[1].to_string() == String::from("powerup") {
-        Ok(rocket::build().mount("/get", routes![get_one,get_all,get_many,get_custom_filter]).mount("/put",routes![put_one]).mount("/post",routes![post_one]).mount("/delete",routes![delete_one]))     
+        Ok(rocket::build().mount("/get", routes![get_one,get_all,get_many,get_custom_filter]).mount("/put",routes![put_one]).mount("/post",routes![post_one]).mount("/delete",routes![delete_one]).mount("/patch", routes![patch]))     
     }
 
     else{
