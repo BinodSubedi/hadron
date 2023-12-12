@@ -33,10 +33,21 @@ pub struct DeleteStandardResponse{
 
 }
 
-#[delete("/<collection>",format = "json",data="<body>")]
-pub async fn delete_one(collection:String, body:Json<DeleteStandardInputFormat>)-> Json<DeleteStandardResponse>{
+#[delete("/<collection>/<id>",format = "json",data="<body>")]
+pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInputFormat>)-> Json<DeleteStandardResponse>{
 
     println!("{:?}",body);
+    println!("{}", id);
+
+    //Steps are simple
+    //First implement all logic in get 
+    //except we need to stop at the file where we find the match and
+    //stop at the same point, appending a new member data in the file where we removed the data
+    //and the data comes from last member of collection and //NOTE:: we need to delete the last
+    //file if the last file has no data any longer //ALSO:: If the data removed file is last do
+    //NOTHING
+
+
 
     return Json(DeleteStandardResponse{
         
