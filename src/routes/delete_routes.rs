@@ -409,6 +409,7 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
                 foundState = DocumentFoundState::AlreadyLast;
                 
+                found_document_num = i;
 
                found_file_data = Some(str_splitted); 
 

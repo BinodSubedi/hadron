@@ -135,6 +135,14 @@ pub async fn get_all(collection:String)-> Json<GetStandardResponse>{
 
     let mut final_values_list:Vec<Value> = Vec::new();
 
+    for &byte in key_val.iter(){
+        vec_key.push(byte);
+    } 
+
+    let key = GenericArray::from_slice(&vec_key);
+
+
+
 
     for i in 1..(total_number_of_files+1){
     
@@ -161,12 +169,6 @@ pub async fn get_all(collection:String)-> Json<GetStandardResponse>{
 
        let current_chosen_file = fs::read(directory.clone()+"/"+&file_name).unwrap();
 
-
-        for &byte in key_val.iter(){
-            vec_key.push(byte);
-        } 
-
-        let key = GenericArray::from_slice(&vec_key);
 
         // let mut block:GenericArray<u8,U16> = GenericArray::from([0u8;16]);
 
