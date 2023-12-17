@@ -1,4 +1,4 @@
-use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
+use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form}; 
 use std::{fs,env,str::FromStr};
 use std::collections::HashMap;
 use aes::Aes128;
@@ -34,10 +34,23 @@ pub struct DeleteStandardResponse{
     
     status: u16,
     response: ResponseStatus,
-    data: Vec<Value>
-
+    data: Option<Value>
 
 }
+
+#[derive(PartialEq)]
+enum DocumentFoundState{
+
+    NotFound,
+    AlreadyLast,
+    NotInLast
+}
+
+
+
+
+
+
 
 #[delete("/<collection>/<id>",format = "json",data="<body>")]
 pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInputFormat>)-> Json<DeleteStandardResponse>{
@@ -113,8 +126,7 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
             
             status: 404,
             response: ResponseStatus::NotFound,
-            data: vec![Value::Null]
-
+            data: None
         };
 
         return Json(res);
@@ -138,12 +150,43 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
     let key_val =key_str.as_bytes();
 
-    let mut final_values_list:Vec<Value> = Vec::new();
+    for &byte in key_val.iter(){
+        vec_key.push(byte);
+    } 
 
+    let key = GenericArray::from_slice(&vec_key);
+
+
+   let mut foundState = DocumentFoundState::NotFound; 
+
+   let mut deletedData:Option<Value> = None;
+
+
+
+   let mut found_file_data:Option<Vec<Value>> = None;
+
+   let mut last_file_data:Option<Vec<Value>> = None;
+
+   let mut found_document_num = 1;
 
     for i in 1..(total_number_of_files+1){
     
+
+        if foundState == DocumentFoundState::NotInLast{
+
+
+                if i != total_number_of_files {
+
+
+                    continue;
+
+                }
+
+
+        }
+
         let file_name:String;
+
 
         println!("{}",i);
         if i ==1{
@@ -165,13 +208,6 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 //        let directory = String::from("/home/qubit/Documents/hadron/.data/data");
 
        let current_chosen_file = fs::read(directory.clone()+"/"+&file_name).unwrap();
-
-
-        for &byte in key_val.iter(){
-            vec_key.push(byte);
-        } 
-
-        let key = GenericArray::from_slice(&vec_key);
 
         // let mut block:GenericArray<u8,U16> = GenericArray::from([0u8;16]);
 
@@ -309,8 +345,10 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
         //Here we need to search for the same id as provided in the request and if found
         //we need to replace the data with data in the last file
+        //
+        let mut removing_index:Option<usize> = None;
         
-        for val in &str_splitted{
+        for (index,val) in str_splitted.iter().enumerate(){
 
 
 
@@ -322,7 +360,24 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
                    
                     if k == "id"{
-                     println!("{:?}",k);
+                     if let Value::String(val) = v{
+
+                    
+                         println!("{}",val);
+
+                         println!("{}",id);
+                         if val == &id{
+
+
+
+                             removing_index = Some(index);
+
+
+
+                         }
+
+                     }
+                    
 
                     }
 
@@ -334,19 +389,87 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
         }
 
-        final_values_list.extend(str_splitted);
+        if let Some(index_val) = removing_index{
 
+            
+            deletedData = Some(str_splitted[index_val].clone());
+            
+
+            str_splitted.remove(index_val);
+
+
+            //here i means variable counting loop value in total number of files in outermost loop
+
+            if i == total_number_of_files {
+                
+
+                println!("Same file here");
+            
+                //here we need to write the current file with string format from str_splitted
+
+                foundState = DocumentFoundState::AlreadyLast;
+                
+
+               found_file_data = Some(str_splitted); 
+
+               break;
+
+            }else{
+
+
+               //Here we read the file and get the last value from the final file name and the add
+               //to the file where we removed the value which is str_splitted at last add if the
+               //last file has no extra data delete the file
+
+
+                foundState = DocumentFoundState::NotInLast;
+
+
+                found_file_data = Some(str_splitted);
+
+                
+                found_document_num = i;
+
+
+            }
+
+
+
+        }else{
+
+            if foundState == DocumentFoundState::NotInLast && i == total_number_of_files{
+
+
+                last_file_data = Some(str_splitted);
+
+
+        }
+
+
+
+        }
+
+
+        
     }
 
 
 
+    //Here we got the data where we removed the thing with the given id and the last file data
+
+    println!("Deleted_data:{:?}",deletedData);
+
+    println!("Deleted_file_index:{}",found_document_num);
+
+    println!("Found_data with removed data: {:?}",found_file_data);
+
+    println!("Last file data:{:?}",last_file_data);
 
     return Json(DeleteStandardResponse{
 
         status: 200,
         response: ResponseStatus::Success,
-        data: vec![Value::Null]
-
+        data:deletedData
     });
 
 }
