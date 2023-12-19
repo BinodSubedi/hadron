@@ -1,5 +1,5 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form}; 
-use std::{fs,env,str::FromStr};
+use std::{fs,env,str::FromStr, io::Write};
 use std::collections::HashMap;
 use aes::Aes128;
 use serde_json::{Value};
@@ -47,6 +47,82 @@ enum DocumentFoundState{
 }
 
 
+fn encrypt(data:Vec<Value>, key: & GenericArray<u8,U16>)-> Vec<GenericArray<u8,U16>> {
+
+    let mut blocks_raw:Vec<u8> = Vec::new();
+
+    for datum in data{
+
+   
+
+    for &byte in datum.to_string().as_bytes().iter(){
+
+
+        blocks_raw.push(byte);
+
+    }
+
+
+    println!("blocks:{:?}",blocks_raw);
+
+    println!("{}",blocks_raw.len());
+
+
+    let remainder_padd_add_len = 16- (blocks_raw.len() % 16);  
+
+
+    //Adding spaces as padding up to that point and now adding making space of byte for comma
+
+    blocks_raw.extend(vec![32;remainder_padd_add_len-1]);
+
+    blocks_raw.push(44);
+
+
+    }
+
+    let mut blocks:Vec<GenericArray<u8, U16>> = Vec::new();
+
+
+    let mut counter = 0;
+
+    loop{    
+
+        //println!("counterrr:{}, {}",counter,contents.len());
+
+        blocks.push( GenericArray::from_slice(&blocks_raw[counter..(counter+16)]).clone());
+
+        //println!("{}",&counter);
+
+        counter = counter + 16; 
+
+
+        if counter == blocks_raw.len(){
+
+            //println!("{counter}");
+
+            break;
+        }
+
+    }                     
+
+
+    // let mut block:GenericArray<u8,U16> = GenericArray::from_slice(&contents).clone();
+    //  let mut block:GenericArray<u8,U16> = GenericArray::from_slice(&vec_key).clone();
+
+    let cipher = Aes128::new(key);
+
+
+    // cipher.decrypt_block(&mut block);
+
+    cipher.encrypt_blocks(&mut blocks);
+
+
+
+
+    blocks
+
+
+}
 
 
 
@@ -485,7 +561,7 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
         //NOTE:delete last file if nothing is remaining
         let file_name_del = collection.clone().to_lowercase() + "-" + &(total_number_of_files-1).to_string() + ".dat";
 
-        if last_file_data.unwrap().len() == 0 {
+        if last_file_data.clone().unwrap().len() == 0 {
 
 
             //delete final file here
@@ -498,7 +574,23 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
             //We need to encrypt the raw from last_file_data and save to last file
 
-            
+            let mut last_file = fs::OpenOptions::new().open(file_name_del).unwrap();
+
+
+            let encrypted_one = encrypt(last_file_data.unwrap(), key);
+
+            for arr in encrypted_one{
+
+                if let Err(err) =  last_file.write_all(&arr){
+                    eprintln!("{:?}",err);
+                    panic!("encrypted data not written!");
+                }
+
+
+            }
+
+
+
 
         }
 
@@ -515,13 +607,16 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
         //This is a little flawed in large scale as we need to get some data from the last file
         //if we delete so we might want to take secondlast file data too, to make near equal
         //distribution
-       
+        let file_name_del = collection.clone().to_lowercase() + "-" + &(total_number_of_files-1).to_string() + ".dat";
 
-        match last_file_data.unwrap().len(){
+        match last_file_data.clone().unwrap().len(){
 
             0=>{
                 
                 //Just delete the final file
+
+                fs::remove_file(file_name_del).unwrap();
+
 
 
             }
@@ -529,9 +624,55 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
             1=>{
 
                 //Append the final data to found_file_data
-                //Delete the final file
-                //Encrypt the appended data list and persist
 
+                
+                if let Some(mut data) = found_file_data{
+
+
+
+                    data.push(last_file_data.unwrap()[0].clone());
+
+                    //Delete the final file
+
+                    fs::remove_file(file_name_del).unwrap();
+
+
+                    //Encrypt the appended data list and persist
+
+                    let encrypted_data = encrypt(data.clone(), key);
+
+                    let found_file;
+
+                    if found_document_num == 1 {
+
+                        found_file = collection.clone().to_lowercase() + ".dat";
+
+
+                    }else{
+
+                        found_file = collection.clone().to_lowercase() + "-" + &(found_document_num-1).to_string() + ".dat";
+
+                    }
+
+                   
+                    let mut file = fs::OpenOptions::new().open(found_file).unwrap();
+
+                    for arr in encrypted_data{
+
+                        if let Err(err) =  file.write_all(&arr){
+                            eprintln!("{:?}",err);
+                            panic!("encrypted data not written!");
+                        }
+
+
+                    }
+
+
+
+
+
+
+                }
             }
 
             _=>{
