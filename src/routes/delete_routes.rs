@@ -466,6 +466,90 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
 
     println!("Last file data:{:?}",last_file_data);
 
+
+    if foundState == DocumentFoundState::NotFound {
+
+        return Json(DeleteStandardResponse{
+
+            status: 200,
+            response: ResponseStatus::Success,
+            data:deletedData
+        });
+
+
+    }
+
+
+    if foundState == DocumentFoundState::AlreadyLast{
+
+        //NOTE:delete last file if nothing is remaining
+        let file_name_del = collection.clone().to_lowercase() + "-" + &(total_number_of_files-1).to_string() + ".dat";
+
+        if last_file_data.unwrap().len() == 0 {
+
+
+            //delete final file here
+
+            fs::remove_file(file_name_del).unwrap();
+
+
+        }else{
+
+
+            //We need to encrypt the raw from last_file_data and save to last file
+
+            
+
+        }
+
+
+
+    }else if foundState != DocumentFoundState::AlreadyLast{
+        
+        //Here we do all the data encrypting
+       //NOTE: Here too we need to put one more data from the last file and if
+       //the length of the last_file_data is 0 or 1 before ejecting one data block
+       //we delete the last file
+       
+
+        //This is a little flawed in large scale as we need to get some data from the last file
+        //if we delete so we might want to take secondlast file data too, to make near equal
+        //distribution
+       
+
+        match last_file_data.unwrap().len(){
+
+            0=>{
+                
+                //Just delete the final file
+
+
+            }
+
+            1=>{
+
+                //Append the final data to found_file_data
+                //Delete the final file
+                //Encrypt the appended data list and persist
+
+            }
+
+            _=>{
+
+                //Append one document(data unit) to found_file_data
+                //Encrypt both last_file_data and appended data list
+                //persist into both file
+
+
+            }
+
+        }
+
+
+
+
+    } 
+
     return Json(DeleteStandardResponse{
 
         status: 200,
