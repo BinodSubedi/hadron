@@ -678,8 +678,78 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
             _=>{
 
                 //Append one document(data unit) to found_file_data
-                //Encrypt both last_file_data and appended data list
-                //persist into both file
+            
+
+                if let Some(mut data) = found_file_data{
+
+                    
+
+                    let mut internal_data_last = last_file_data.unwrap();
+
+
+                    data.push(internal_data_last[internal_data_last.len()-1].clone());
+
+
+                    internal_data_last.remove(internal_data_last.len()-1);
+
+                    //Encrypt both last_file_data and appended data list
+
+                    //persist into both file
+                    //Initially encrypting found_data_file
+
+                    let encrypted_data = encrypt(data.clone(), key);
+
+                    let found_file;
+
+                    if found_document_num == 1 {
+
+                        found_file = collection.clone().to_lowercase() + ".dat";
+
+
+                    }else{
+
+                        found_file = collection.clone().to_lowercase() + "-" + &(found_document_num-1).to_string() + ".dat";
+
+                    }
+
+
+                    let mut file = fs::OpenOptions::new().open(found_file).unwrap();
+
+                    for arr in encrypted_data{
+
+                        if let Err(err) =  file.write_all(&arr){
+                            eprintln!("{:?}",err);
+                            panic!("encrypted data not written!");
+                        }
+
+
+                    }
+
+
+
+                    //Now encrypting and persisting last_file_data
+
+
+                    let encrypted_data = encrypt(internal_data_last.clone(), key);
+
+                    let last_file_name = collection.clone().to_lowercase() + "-" + &(total_number_of_files-1).to_string() + ".dat";
+
+
+                    let mut last_file = fs::OpenOptions::new().open(last_file_name).unwrap();
+
+                    for arr in encrypted_data{
+
+                        if let Err(err) =  last_file.write_all(&arr){
+                            eprintln!("{:?}",err);
+                            panic!("encrypted data not written!");
+                        }
+
+
+                    }
+
+
+                }
+
 
 
             }
