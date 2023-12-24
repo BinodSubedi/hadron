@@ -41,7 +41,7 @@ pub struct PatchStandardResponse{
 
 }
 
-#[delete("/<collection>/<id>",format = "json",data="<body>")]
+#[patch("/<collection>/<id>",format = "json",data="<body>")]
 pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputFormat>)-> Json<PatchStandardResponse>{
 
     println!("{:?}",body);
@@ -145,9 +145,9 @@ pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputForm
 
    let mut found_file_data:Option<Vec<Value>> = None;
 
-   let mut last_file_data:Option<Vec<Value>> = None;
+   let mut patching_index:Option<usize> = None;
 
-   let mut found_document_num = 1;
+   let mut found_document_num = 0;
 
     for i in 1..(total_number_of_files+1){
     
@@ -314,7 +314,7 @@ pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputForm
         //Here we need to search for the same id as provided in the request and if found
         //we need to replace the data with data in the last file
         //
-        let mut removing_index:Option<usize> = None;
+        
         
         for (index,val) in str_splitted.iter().enumerate(){
 
@@ -337,9 +337,13 @@ pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputForm
                          if val == &id{
 
 
+                             found_file_data = Some(str_splitted.clone());
 
-                             removing_index = Some(index);
+                             patching_index = Some(index);
+                    
+                             found_document_num = i;
 
+                             break;
 
 
                          }
@@ -357,69 +361,61 @@ pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputForm
 
         }
 
-        if let Some(index_val) = removing_index{
-
-            
-            deletedData = Some(str_splitted[index_val].clone());
-            
-
-            str_splitted.remove(index_val);
-
-
-            //here i means variable counting loop value in total number of files in outermost loop
-
-            if i == total_number_of_files {
-                
-
-                println!("Same file here");
-            
-                //here we need to write the current file with string format from str_splitted
-
-                
-                found_document_num = i;
-
-               found_file_data = Some(str_splitted); 
-
-               break;
-
-            }else{
-
-
-               //Here we read the file and get the last value from the final file name and the add
-               //to the file where we removed the value which is str_splitted at last add if the
-               //last file has no extra data delete the file
-
-
-
-
-                found_file_data = Some(str_splitted);
-
-                
-                found_document_num = i;
-
-
-            }
-
-
-
-        }
-
 
         
     }
 
 
 
+    if found_document_num == 0 {
+
+
+        return Json(PatchStandardResponse{
+
+            status: 200,
+            response: ResponseStatus::Success,
+            data:Value::Null
+
+        });
+
+
+    }
 
 
 
+    if let Some(mut data) = found_file_data{
+
+
+        //Also, we need a little more sophisticated patch process
+        //through loop and changind data where we are suppose to,
+        //check out for username cause in user document, ambiguity can apper while processing
+
+        data[patching_index.unwrap()] = body.data.clone(); 
+
+
+        //Here we write the found_file_data file with newly chnaged data
+
+
+        return Json(PatchStandardResponse{
+
+            status: 200,
+            response: ResponseStatus::Success,
+            data:data[patching_index.unwrap()].clone()
+
+        });
+
+
+
+
+    }
 
     return Json(PatchStandardResponse{
-        
+
         status: 200,
         response: ResponseStatus::Success,
         data:Value::Null
 
     });
+
 
 }
