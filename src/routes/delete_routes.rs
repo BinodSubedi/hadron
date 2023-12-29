@@ -655,7 +655,7 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
                     }
 
                    
-                    let mut file = fs::OpenOptions::new().open(found_file).unwrap();
+                    let mut file = fs::OpenOptions::new().write(true).open(found_file).unwrap();
 
                     for arr in encrypted_data{
 
@@ -713,7 +713,7 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
                     }
 
 
-                    let mut file = fs::OpenOptions::new().open(found_file).unwrap();
+                    let mut file = fs::OpenOptions::new().write(true).open(found_file).unwrap();
 
                     for arr in encrypted_data{
 
@@ -735,7 +735,7 @@ pub async fn delete_one(collection:String,id:String, body:Json<DeleteStandardInp
                     let last_file_name = collection.clone().to_lowercase() + "-" + &(total_number_of_files-1).to_string() + ".dat";
 
 
-                    let mut last_file = fs::OpenOptions::new().open(last_file_name).unwrap();
+                    let mut last_file = fs::OpenOptions::new().write(true).open(last_file_name).unwrap();
 
                     for arr in encrypted_data{
 

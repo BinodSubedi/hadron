@@ -1,7 +1,9 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
 use std::{fs,env,str::FromStr};
+use std::io::{Read,Write};
 use std::collections::HashMap;
 use serde_json::{Value};
+use std::fs::OpenOptions;
 use std::ops::Deref;
 extern crate regex;
 use crate::input_and_schema_compare::comparer; 
@@ -27,7 +29,8 @@ pub struct PatchStandardInputFormat{
 enum ResponseStatus{
     Success,
     Failed,
-    NotFound
+    NotFound,
+    BadRequest
 }
 
 #[derive(Debug,Clone,Deserialize,Serialize)]
@@ -40,6 +43,86 @@ pub struct PatchStandardResponse{
 
 
 }
+
+
+fn encrypt(data:Vec<Value>, key: & GenericArray<u8,U16>)-> Vec<GenericArray<u8,U16>> {
+
+    let mut blocks_raw:Vec<u8> = Vec::new();
+
+    for datum in data{
+
+   
+
+    for &byte in datum.to_string().as_bytes().iter(){
+
+
+        blocks_raw.push(byte);
+
+    }
+
+
+    println!("blocks:{:?}",blocks_raw);
+
+    println!("{}",blocks_raw.len());
+
+
+    let remainder_padd_add_len = 16- (blocks_raw.len() % 16);  
+
+
+    //Adding spaces as padding up to that point and now adding making space of byte for comma
+
+    blocks_raw.extend(vec![32;remainder_padd_add_len-1]);
+
+    blocks_raw.push(44);
+
+
+    }
+
+    let mut blocks:Vec<GenericArray<u8, U16>> = Vec::new();
+
+
+    let mut counter = 0;
+
+    loop{    
+
+        //println!("counterrr:{}, {}",counter,contents.len());
+
+        blocks.push( GenericArray::from_slice(&blocks_raw[counter..(counter+16)]).clone());
+
+        //println!("{}",&counter);
+
+        counter = counter + 16; 
+
+
+        if counter == blocks_raw.len(){
+
+            //println!("{counter}");
+
+            break;
+        }
+
+    }                     
+
+
+    // let mut block:GenericArray<u8,U16> = GenericArray::from_slice(&contents).clone();
+    //  let mut block:GenericArray<u8,U16> = GenericArray::from_slice(&vec_key).clone();
+
+    let cipher = Aes128::new(key);
+
+
+    // cipher.decrypt_block(&mut block);
+
+    cipher.encrypt_blocks(&mut blocks);
+
+
+
+
+    blocks
+
+
+}
+
+
 
 #[patch("/<collection>/<id>",format = "json",data="<body>")]
 pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputFormat>)-> Json<PatchStandardResponse>{
@@ -390,10 +473,66 @@ pub async fn patch(collection:String,id:String, body:Json<PatchStandardInputForm
         //through loop and changind data where we are suppose to,
         //check out for username cause in user document, ambiguity can apper while processing
 
-        data[patching_index.unwrap()] = body.data.clone(); 
+        //Simply checking if the requested patch id is same as the sent data id
 
+        if body.data["id"] == id {
+
+            
+            data[patching_index.unwrap()] = body.data.clone();
+
+        }else{
+
+
+        return Json(PatchStandardResponse{
+            status: 200,
+            response: ResponseStatus::BadRequest,
+            data:Value::Null
+
+    });
+
+
+
+
+
+        }
 
         //Here we write the found_file_data file with newly chnaged data
+
+        //encrypt and save the respective file data
+
+        let encrypted_data = encrypt(data.clone(), key);
+
+        let found_doc_name;
+
+        let directory = String::from("/home/qubit/Documents/hadron/.data/data/");
+
+        if found_document_num == 1 {
+
+
+            found_doc_name = collection.to_lowercase() +".dat";
+
+        }else{
+
+        found_doc_name = collection.to_lowercase() + "-" + &(found_document_num-1).to_string() + ".dat";
+
+        }
+
+
+        println!("{}",found_doc_name);
+
+        
+        let mut found_file = OpenOptions::new().write(true).open(directory + &found_doc_name).unwrap();
+
+        for arr in encrypted_data{
+
+            if let Err(err) =  found_file.write_all(&arr){
+                    eprintln!("{:?}",err);
+                    panic!("encrypted data not written!");
+            }
+
+
+        }
+
 
 
         return Json(PatchStandardResponse{
