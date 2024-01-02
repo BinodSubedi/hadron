@@ -54,6 +54,16 @@ pub struct PostUserStandardInputFormat{
 
 }
 
+#[derive(Debug,Clone,Deserialize,Serialize)]
+#[serde(crate="rocket::serde")]
+pub struct PostUserStandardResponse<'a>{
+    
+    status: u16,
+    response: ResponseStatus,
+    jwt:Option<&'a str>
+
+
+}
 
 
  fn raw_id_formatter(values :Vec<String>)-> Vec<String>{
@@ -465,8 +475,8 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
 
 }
 
-#[post("/<collection>",format = "json",data="<body>")]
-pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>)-> Json<PostStandardResponse>{
+#[post("/user/<collection>",format = "json",data="<body>")]
+pub async fn post_user<'a>(collection:String, body:Json<PostUserStandardInputFormat>)-> Json<PostUserStandardResponse<'a>>{
    
     let directory = String::from("/home/qubit/Documents/hadron/.data/data");
 
@@ -524,10 +534,11 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
 
     if required_model_file == None {
         
-        let res = PostStandardResponse{
+        let res = PostUserStandardResponse{
             
             status: 404,
             response: ResponseStatus::NotFound,
+            jwt: None
         };
 
         return Json(res);
@@ -742,7 +753,9 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
 
             if let Value::Object(obj) = val{
 
-                let mut matched = false;
+                let mut username_matched = false;
+
+                let mut password_matched = false;
 
                 for (k,v) in obj {
                     
@@ -757,13 +770,26 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
                          if username == &body.username{
 
 
+                             println!("Username matched!");
                              //found_file_data = Some(str_splitted.clone());
 
                              //patching_index = Some(index);
                     
                              //found_document_num = i;
-                             matched = true;
+                             username_matched = true;
 
+                             if password_matched {
+                                 println!("Both matched!");
+                                 found_file_data = Some(str_splitted.clone());
+
+                                 patching_index = Some(index);
+
+                                 found_document_num = i;
+
+                                 break;
+
+
+                             }
 
 
                          }
@@ -778,9 +804,12 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
                     
                          if password == &body.password{
 
+                             println!("Password matched!");
 
-                             if matched {
+                             password_matched = true;
 
+                             if username_matched {
+                             println!("Both matched!");
                              found_file_data = Some(str_splitted.clone());
 
                              patching_index = Some(index);
@@ -821,10 +850,11 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
     if found_document_num == 0 {
 
 
-        return Json(PostStandardResponse{
+        return Json(PostUserStandardResponse{
 
             status: 404,
             response: ResponseStatus::NotFound,
+            jwt:None
 
         });
 
@@ -836,14 +866,15 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
         println!("{:?}",[patching_index.unwrap()].clone());
 
 
-        return Json(PostStandardResponse{
+        return Json(PostUserStandardResponse{
 
             status: 200,
             response: ResponseStatus::Success,
+            jwt:Some("we will finish this")
         });
     }else{
 
-        Json(PostStandardResponse { status: 400, response: ResponseStatus::Failed })
+        Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None})
 
 
     }
