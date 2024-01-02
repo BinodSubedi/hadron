@@ -80,7 +80,23 @@ pub async fn get_all(collection:String)-> Json<GetStandardResponse>{
 
     for file in files{
 
-        
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         let string_file_val = file.expect("well there\'s something fishy").path();
 
         let string_format = string_file_val.into_os_string().into_string().expect("format change error");
@@ -345,6 +361,16 @@ pub async fn get_many(collection:String,number:i8) -> String {
 #[get("/<collection>/one/<id>")]
 pub async fn get_one(collection:String,id:String)-> Json<GetOneStandardResponse>{
    format!("The query in {collection}, and the id is {id}");
+
+   if id.to_lowercase() == "pushlogin" {
+
+       //here we need to check for header with
+       //bearer authorization and found out if the token is correct
+       //but in this scope we just check date of creation and expiry
+       //data
+       //we just reassign id out of the token to id
+
+   }
 
     let directory = String::from("/home/qubit/Documents/hadron/.data/data");
 
