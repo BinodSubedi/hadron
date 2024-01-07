@@ -12,4 +12,9 @@ bytes = { version = "1", features = ["serde"] }
 serde_json = "1.0.107"
 regex = "1.10.2"
 uuid = {version = "1.6.1", features = ["v4"]}
+jwt = "0.16.0"
+hmac = "0.12.1"
+sha2 = "0.10.8"
+time = "0.3.31"
+chrono = "0.4.31"
 

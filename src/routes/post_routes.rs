@@ -10,9 +10,14 @@ use aes::Aes128;
 use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
     generic_array::{GenericArray,typenum::U16}};
 
-
-
-
+use jwt::{SignWithKey,ToBase64};
+use jwt::VerifyWithKey;
+use hmac::Hmac;
+use sha2::Sha256;
+use std::collections::BTreeMap;
+//use time::Date;
+use chrono::prelude::*;
+use std::{thread,time};
 
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -56,13 +61,36 @@ pub struct PostUserStandardInputFormat{
 
 #[derive(Debug,Clone,Deserialize,Serialize)]
 #[serde(crate="rocket::serde")]
-pub struct PostUserStandardResponse<'a>{
+pub struct PostUserStandardResponse{
     
     status: u16,
     response: ResponseStatus,
-    jwt:Option<&'a str>
+    jwt:Option<String>
 
 
+}
+
+
+
+fn generateJWT(id:String,key:&[u8])->String{
+
+    let secret:Hmac<Sha256> = Hmac::new_from_slice(key).unwrap();
+
+    //Could be better to use Box<dyn DateTimeStore> it's fine for now
+
+    let mut claims:BTreeMap<String, String> = BTreeMap::new(); 
+
+    claims.insert("id".into(),id);
+
+    let date_now_plus_limit = Utc::now().timestamp() + (60 * 60 * 24 * 30);
+
+    println!("{:?}", date_now_plus_limit);
+    
+    claims.insert("expiry".into(),date_now_plus_limit.to_string());
+
+    let token_str = claims.sign_with_key(&secret).unwrap();
+
+    return token_str;
 }
 
 
@@ -476,7 +504,7 @@ pub async fn post_one(collection:String, body:Json<PostStandardInputFormat>)-> J
 }
 
 #[post("/user/<collection>",format = "json",data="<body>")]
-pub async fn post_user<'a>(collection:String, body:Json<PostUserStandardInputFormat>)-> Json<PostUserStandardResponse<'a>>{
+pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>)-> Json<PostUserStandardResponse>{
    
     let directory = String::from("/home/qubit/Documents/hadron/.data/data");
 
@@ -779,6 +807,7 @@ pub async fn post_user<'a>(collection:String, body:Json<PostUserStandardInputFor
                              username_matched = true;
 
                              if password_matched {
+
                                  println!("Both matched!");
                                  found_file_data = Some(str_splitted.clone());
 
@@ -863,14 +892,22 @@ pub async fn post_user<'a>(collection:String, body:Json<PostUserStandardInputFor
 
     if let Some(data) = found_file_data{
 
-        println!("{:?}",[patching_index.unwrap()].clone());
+        println!("{:?}",patching_index.unwrap().clone());
+
+
+        //Generating JWT token based on id
+
+        println!("{}",key_str);
+
+
+        let jwtToken = generateJWT(data[patching_index.unwrap()]["id"].to_string(),key);
 
 
         return Json(PostUserStandardResponse{
 
             status: 200,
             response: ResponseStatus::Success,
-            jwt:Some("we will finish this")
+            jwt:Some(jwtToken)
         });
     }else{
 

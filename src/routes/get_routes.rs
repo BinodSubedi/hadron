@@ -1,7 +1,6 @@
 use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
 use std::{env, str::FromStr};
 use std::fs;
-use std::collections::HashMap;
 use serde_json::{Value};
 use std::ops::Deref;
 extern crate regex;
