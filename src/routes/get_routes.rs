@@ -1,4 +1,4 @@
-use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form};
+use rocket::{serde::{Serialize,Deserialize, json::Json}, form::Form,Request, request, outcome::Outcome, http::Status};
 use std::{env, str::FromStr};
 use std::fs;
 use serde_json::{Value};
@@ -9,6 +9,13 @@ use aes::Aes128;
 use aes::cipher::{BlockEncrypt, BlockDecrypt, KeyInit,
     generic_array::{GenericArray,typenum::U16}};
 
+use rocket::request::FromRequest;
+use jwt::VerifyWithKey;
+use hmac::Hmac;
+use sha2::Sha256;
+use std::collections::BTreeMap;
+
+
 
 #[derive(Debug,Clone,Deserialize,Serialize)]
 #[serde(crate="rocket::serde")]
@@ -17,6 +24,32 @@ pub struct GetStandardInputFormat{
     pub data: Value,
 
 }
+
+#[derive(Debug)]
+pub struct Token(Option<String>);
+
+#[derive(Debug)]
+pub enum ApiTokenError{
+    NotFound,
+    Invalid
+}
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for Token {
+    type Error = ApiTokenError;
+
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self,Self::Error> {
+        let token = request.headers().get_one("token");
+        match token {
+            Some(token) => {
+                // check validity
+                Outcome::Success(Token(Some(token.to_string())))
+            }
+            None => Outcome::Success(Token(None)),
+        }
+    }
+}
+
 
 
 #[derive(Debug,Clone,Serialize,Deserialize)]
@@ -351,20 +384,61 @@ pub async fn get_all(collection:String)-> Json<GetStandardResponse>{
    })
 
 }
-
+//Here we change the get many route to only let data out which has reference id
 #[get("/<collection>/many/<number>")]
 pub async fn get_many(collection:String,number:i8) -> String {
    format!("The query in {}, and number of element is {}",collection,number) 
 }
 
 #[get("/<collection>/one/<id>")]
-pub async fn get_one(collection:String,id:String)-> Json<GetOneStandardResponse>{
+pub async fn get_one(collection:String,id:String,token:Token)-> Json<GetOneStandardResponse>{
    format!("The query in {collection}, and the id is {id}");
+
+   //we also check if this collection is usertype or not
+   let env_variables: Vec<String> = env::args().collect();
+   let key_str = env_variables.last().unwrap();
+
+
+    let key_val =key_str.as_bytes();
+
+    let mut vec_key = Vec::new();
+
+    for &byte in key_val.iter(){
+        vec_key.push(byte);
+    } 
+
+    let key = GenericArray::from_slice(&vec_key);
+
+
 
    if id.to_lowercase() == "pushlogin" {
 
        //here we need to check for header with
        //bearer authorization and found out if the token is correct
+
+       println!("This is token::::::::{:?}", token);
+
+       if let Token(Some(val)) = token {
+
+           //Decrypt the token into data
+
+
+           let key: Hmac<Sha256> = Hmac::new_from_slice(&vec_key).unwrap();
+
+           let claims: BTreeMap<String, String> = val.verify_with_key(&key).unwrap();
+
+           println!("This is the id::::{}",claims["id"]);
+
+
+
+       }else{
+
+           return Json(
+               GetOneStandardResponse { status: 400, response: ResponseStatus::Failed, data: Value::Null });
+
+       }
+
+
        //but in this scope we just check date of creation and expiry
        //data
        //we just reassign id out of the token to id
@@ -444,21 +518,11 @@ pub async fn get_one(collection:String,id:String)-> Json<GetOneStandardResponse>
 
 
 
-    let mut vec_key = Vec::new();
 
-    let env_variables: Vec<String> = env::args().collect();
+
 
     println!("{:?}",env_variables.last().unwrap());
 
-    let key_str = env_variables.last().unwrap();
-
-    let key_val =key_str.as_bytes();
-
-    for &byte in key_val.iter(){
-        vec_key.push(byte);
-    } 
-
-    let key = GenericArray::from_slice(&vec_key);
 
 
 
