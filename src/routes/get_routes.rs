@@ -3,6 +3,7 @@ use std::{env, str::FromStr};
 use std::fs;
 use serde_json::{Value};
 use std::ops::Deref;
+use chrono::prelude::*;
 extern crate regex;
 use crate::input_and_schema_compare::comparer; 
 use aes::Aes128;
@@ -57,7 +58,9 @@ impl<'r> FromRequest<'r> for Token {
 enum ResponseStatus{
     Success,
     Failed,
-    NotFound
+    NotFound,
+    JWTExpiry,
+    InvalidJWT
 }
 
 #[derive(Debug,Clone,Deserialize,Serialize)]
@@ -394,6 +397,9 @@ pub async fn get_many(collection:String,number:i8) -> String {
 pub async fn get_one(collection:String,id:String,token:Token)-> Json<GetOneStandardResponse>{
    format!("The query in {collection}, and the id is {id}");
 
+
+   let mut check_id:Option<String> = None;
+
    //we also check if this collection is usertype or not
    let env_variables: Vec<String> = env::args().collect();
    let key_str = env_variables.last().unwrap();
@@ -425,10 +431,34 @@ pub async fn get_one(collection:String,id:String,token:Token)-> Json<GetOneStand
 
            let key: Hmac<Sha256> = Hmac::new_from_slice(&vec_key).unwrap();
 
-           let claims: BTreeMap<String, String> = val.verify_with_key(&key).unwrap();
+           let claims: BTreeMap<String, String>;
+
+           if let Ok(claimed_value) = val.verify_with_key(&key){
+
+
+               claims = claimed_value;
+
+           }else{
+
+               return Json(GetOneStandardResponse { status: 400, response: ResponseStatus::InvalidJWT, data: Value::Null });
+
+           }
 
            println!("This is the id::::{}",claims["id"]);
 
+           //here we check for expiry and if not expired then create
+           //a global variable and pass in the decrypted id to it
+
+           let not_expired = claims["expiry"].parse::<i64>().unwrap() > Utc::now().timestamp();
+
+
+           if ! not_expired {
+
+               return Json(GetOneStandardResponse { status: 400, response: ResponseStatus::JWTExpiry, data: Value::Null });
+
+           }
+
+           check_id = Some(claims["id"].clone());
 
 
        }else{
@@ -718,10 +748,13 @@ pub async fn get_one(collection:String,id:String,token:Token)-> Json<GetOneStand
                      if let Value::String(val) = v{
 
                     
-                         println!("{}",val);
+                         println!("val::{}",val);
 
-                         println!("{}",id);
-                         if val == &id{
+                         println!("check_id::{}",check_id.as_ref().unwrap());
+
+                         println!("{}",check_id.as_ref().unwrap().eq(&val.to_string()));
+
+                         if val.eq(check_id.as_ref().unwrap()){
 
 
                              found_file_data = Some(str_splitted.clone());
@@ -768,7 +801,9 @@ pub async fn get_one(collection:String,id:String,token:Token)-> Json<GetOneStand
 
     }
 
-    if let Some(data) = found_file_data{
+    if let Some(mut data) = found_file_data{
+
+        data[patching_index.unwrap()]["password"] = Value::Null;
 
         return Json(GetOneStandardResponse{
 

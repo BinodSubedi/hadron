@@ -899,17 +899,27 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
 
         println!("{}",key_str);
 
+        if let Value::String(storing_id) = data[patching_index.unwrap()]["id"].clone(){
 
-        let jwtToken = generateJWT(data[patching_index.unwrap()]["id"].to_string(),key);
+            let jwtToken = generateJWT(storing_id,key);
 
 
-        return Json(PostUserStandardResponse{
+            return Json(PostUserStandardResponse{
 
-            status: 200,
-            response: ResponseStatus::Success,
-            jwt:Some(jwtToken)
-        });
-    }else{
+                status: 200,
+                response: ResponseStatus::Success,
+                jwt:Some(jwtToken)
+            });
+
+
+
+        }else{
+
+            Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None})
+
+        }
+
+           }else{
 
         Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None})
 
