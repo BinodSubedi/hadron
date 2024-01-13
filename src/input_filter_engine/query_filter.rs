@@ -69,6 +69,10 @@ pub fn filter(value:&str){
         
     }
 
+    let file_name_save:String = "/home/qubit/Documents/hadron/.data/data/".to_string()+collection_name_part[1] + ".dat";
+
+    File::create(file_name_save).unwrap();
+
     return;
 
 
