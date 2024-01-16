@@ -65,8 +65,8 @@ pub struct PostUserStandardResponse{
     
     status: u16,
     response: ResponseStatus,
-    jwt:Option<String>
-
+    jwt:Option<String>,
+    id:Option<String>
 
 }
 
@@ -566,7 +566,8 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
             
             status: 404,
             response: ResponseStatus::NotFound,
-            jwt: None
+            jwt: None,
+            id: None
         };
 
         return Json(res);
@@ -883,7 +884,8 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
 
             status: 404,
             response: ResponseStatus::NotFound,
-            jwt:None
+            jwt:None,
+            id:None
 
         });
 
@@ -901,27 +903,28 @@ pub async fn post_user(collection:String, body:Json<PostUserStandardInputFormat>
 
         if let Value::String(storing_id) = data[patching_index.unwrap()]["id"].clone(){
 
-            let jwtToken = generateJWT(storing_id,key);
+            let jwtToken = generateJWT(storing_id.clone(),key);
 
 
             return Json(PostUserStandardResponse{
 
                 status: 200,
                 response: ResponseStatus::Success,
-                jwt:Some(jwtToken)
+                jwt:Some(jwtToken),
+                id:Some(storing_id)
             });
 
 
 
         }else{
 
-            Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None})
+            Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None,id:None})
 
         }
 
            }else{
 
-        Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None})
+        Json(PostUserStandardResponse{ status: 400, response: ResponseStatus::Failed,jwt:None,id:None})
 
 
     }

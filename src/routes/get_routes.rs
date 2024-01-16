@@ -746,7 +746,29 @@ pub async fn get_any_related(collection:String,number:i8,token:Token) -> Json<Ge
     // here we filter the list and provide the number of output that they need
     // but if the filtered list has less just send the less number list
 
-    let final_filtered:Vec<Value> = final_values_list.into_iter().map(|val| val).filter(|val| &val["reference_id"].to_string() == reference_id.as_ref().unwrap()).collect();
+//    println!("reference_id-decrypted_id:{}-{:?},{}",final_values_list[0]["reference_id"], reference_id.as_ref().unwrap(), reference_id.as_ref().unwrap().eq(&final_values_list[0]["reference_id"].to_string()));
+
+    if let Value::String(val) =&final_values_list[0]["reference_id"]{
+
+        println!("val:{}",reference_id.as_ref().unwrap().eq(val));
+
+
+    }
+
+
+    let final_filtered:Vec<Value> = final_values_list.into_iter().map(|val| val).filter(|val|  {
+
+        if let Value::String(id) = &val["reference_id"]{
+
+            reference_id.as_ref().unwrap().eq(id)
+
+        }else{
+
+            false
+
+        }
+
+    }).collect();
 
 
 
@@ -915,7 +937,6 @@ pub async fn get_one(collection:String,id:String,token:Token)-> Json<GetOneStand
 
     //If got time, the file read will be made multi-threaded but for now
     //It's just single threaded
-
 
 
 

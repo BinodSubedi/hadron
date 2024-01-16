@@ -1,7 +1,6 @@
 use serde_json::Value;
 use crate::padd_encrypt_persist::padd_encrypt_persist;
 
-thread_local! {static CHECKVAL: Box<Vec<i8>> = Box::new(Vec::<i8>::new());}
 
 pub fn schema_comparer(input:Value, schema:Value, raw:String,file_name:String,total_num_values:usize){
     
