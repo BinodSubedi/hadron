@@ -98,10 +98,6 @@ pub async fn get_all(collection: String) -> Json<GetStandardResponse> {
     let schema_contents =
         fs::read_to_string(config_schema_dir + &collection.to_lowercase() + ".json");
 
-    println!("{:?}", config_contents);
-
-    println!("{:?}", schema_contents);
-
     if let Ok(val) = config_contents {
         let value_config = Value::from_str(&val).unwrap();
 
@@ -111,15 +107,30 @@ pub async fn get_all(collection: String) -> Json<GetStandardResponse> {
 
         if let Some(Value::String(config_type)) = value_config.get("type") {
             if config_type == "User" || config_type == "user" {
-                println!("Matched typeeeeeeee");
-            } else {
                 return Json(GetStandardResponse {
                     status: 404,
                     response: ResponseStatus::Failed,
                     data: vec![Value::Null],
                 });
             }
-        } else {
+        }
+    } else {
+        return Json(GetStandardResponse {
+            status: 404,
+            response: ResponseStatus::Failed,
+            data: vec![Value::Null],
+        });
+    };
+
+    if let Ok(val) = schema_contents {
+        let value_schema = Value::from_str(&val).unwrap();
+
+        //println!("typoo");
+        //println!("{:?}", value_config["typoo"]);
+        println!("{:?}", value_schema);
+        println!("{:?}", value_schema.get("reference_id"));
+
+        if let Some(_) = value_schema.get("reference_id") {
             return Json(GetStandardResponse {
                 status: 404,
                 response: ResponseStatus::Failed,
@@ -132,7 +143,7 @@ pub async fn get_all(collection: String) -> Json<GetStandardResponse> {
             response: ResponseStatus::Failed,
             data: vec![Value::Null],
         });
-    };
+    }
 
     let directory = String::from("/home/qubit/Documents/hadron/.data/data");
 
